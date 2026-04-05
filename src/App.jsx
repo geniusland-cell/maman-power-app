@@ -40,10 +40,6 @@ function App() {
     alert(`Itinéraire: ${route}`);
   };
 
-  const startVoiceSearch = () => {
-    alert("Recherche vocale en développement...");
-  };
-
   const playAudioInfo = () => {
     alert("Informations audio en développement...");
   };
@@ -396,10 +392,6 @@ function App() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <button className="voice-btn" onClick={startVoiceSearch}>
-            <span>🎤</span>
-            <span>Recherche vocale</span>
-          </button>
         </div>
       </div>
 
