@@ -413,8 +413,31 @@ body {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
+.admin-btn {
+  width: 35px;
+  height: 35px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(100, 200, 255, 0.9);
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.admin-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 150, 255, 0.3);
+  background: rgba(100, 200, 255, 1);
+}
+
+.admin-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 body.dark-mode {
-  /* Nouveau fond sombre plus doux et profond, au style radial */
+  
   background: radial-gradient(circle at top left, #2e1a47, #1a1a3a);
   color: #ffffff; /* texte blanc pour contraste maximal */
 }
@@ -601,4 +624,31 @@ body.dark-mode .theme-switcher {
     height: 40px;
     font-size: 16px;
   }
+}
+
+.logout-btn {
+  padding: 10px 20px;
+  background: linear-gradient(45deg, #e74c3c, #c0392b);
+  color: white;
+  border: none;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 10px rgba(231, 76, 60, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.logout-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(231, 76, 60, 0.5);
+  background: linear-gradient(45deg, #c0392b, #a93226);
+}
+
+.logout-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
 }
