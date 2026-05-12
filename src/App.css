@@ -822,7 +822,7 @@ body.dark-mode .last-refresh {
 .end-indicator {
   background: rgba(0, 151, 57, 0.1);
   border: 2px solid #009739;
-  color: #009739;
+  color: white;
   padding: 12px 20px;
   border-radius: 8px;
   font-size: 14px;
