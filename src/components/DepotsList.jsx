@@ -1,18 +1,41 @@
-import React from "react";
+import React, { useState } from "react";
 import "./DepotsList.css";
 
 export default function DepotsList({ depots }) {
+  const [selectedImage, setSelectedImage] = useState(null);
+
   const handleCall = (phoneNumber) => {
     navigator.clipboard
       .writeText(phoneNumber)
       .then(() => {
         alert(` Numéro copié: ${phoneNumber}\n\nAppel lancé...`);
+        // Lancer l'appel après confirmation
+        setTimeout(() => {
+          window.location.href = `tel:${phoneNumber}`;
+        }, 100);
       })
       .catch((err) => {
         console.error("Erreur copie:", err);
       });
+  };
 
-    window.location.href = `tel:${phoneNumber}`;
+  const openImageModal = (imageUrl) => {
+    setSelectedImage(imageUrl);
+  };
+
+  const closeImageModal = () => {
+    setSelectedImage(null);
+  };
+
+  const getPlaceholderImage = (category) => {
+    const emojiMap = {
+      Poisson: "🐟",
+      Charbon: "⚫",
+      Boissons: "🍺",
+      Vivriers: "🌾",
+      Fruits: "🍌",
+    };
+    return emojiMap[category] || "📦";
   };
 
   if (!depots || depots.length === 0) {
@@ -30,7 +53,7 @@ export default function DepotsList({ depots }) {
       <h2 className="section-title"> Dépôts Disponibles</h2>
 
       <div className="depots-container">
-        {depots.map((depot, index) => {
+        {depots.map((depot) => {
           const isNearest = depot.id === nearestDepot.id;
           const hasProducts = depot.products && depot.products.length > 0;
 
@@ -55,16 +78,44 @@ export default function DepotsList({ depots }) {
                 <div className="products-section">
                   {depot.products.map((product) => (
                     <div key={product.id} className="product-line">
-                      <span className="product-name">{product.name}</span>
-                      <span className="product-category">
-                        {product.category}
-                      </span>
-                      <span className="product-price">
-                        Prix: {product.price} FCFA/{product.unit}
-                      </span>
-                      <span className="product-stock">
-                        Stock: {product.stock_quantity} {product.unit}
-                      </span>
+                      {/* Product Image */}
+                      <div className="product-image-container">
+                        {product.image ? (
+                          <img
+                            src={product.image}
+                            alt={product.name}
+                            className="product-thumb"
+                            onClick={() => openImageModal(product.image)}
+                            title="Cliquer pour agrandir"
+                          />
+                        ) : (
+                          <div
+                            className="product-thumb-placeholder"
+                            onClick={() =>
+                              openImageModal(
+                                `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='50' y='55' font-size='60' text-anchor='middle'%3E${getPlaceholderImage(product.category)}%3C/text%3E%3C/svg%3E`,
+                              )
+                            }
+                            title="Aucune image disponible"
+                          >
+                            {getPlaceholderImage(product.category)}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Product Info */}
+                      <div className="product-info-container">
+                        <span className="product-name">{product.name}</span>
+                        <span className="product-category">
+                          {product.category}
+                        </span>
+                        <span className="product-price">
+                          Prix: {product.price} FCFA/{product.unit}
+                        </span>
+                        <span className="product-stock">
+                          Stock: {product.stock_quantity} {product.unit}
+                        </span>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -99,7 +150,7 @@ export default function DepotsList({ depots }) {
                   title="Voir plus"
                   onClick={() => {
                     alert(
-                      `📍 ${depot.name}\n\n📱 Direct: ${depot.phone_direct}\n💬 WhatsApp: ${depot.phone_whatsapp}\n\n🏘️ ${depot.address}`,
+                      `📍 ${depot.name}\n\n📱 Direct: ${depot.phone_direct}\n💬 WhatsApp: ${depot.phone_whatsapp}\n\n📍 ${depot.address || depot.quartier}`,
                     );
                   }}
                 >
@@ -111,6 +162,25 @@ export default function DepotsList({ depots }) {
           );
         })}
       </div>
+
+      {/* Image Modal */}
+      {selectedImage && (
+        <div className="image-modal-overlay" onClick={closeImageModal}>
+          <div
+            className="image-modal-content"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button className="image-modal-close" onClick={closeImageModal}>
+              ✕
+            </button>
+            <img
+              src={selectedImage}
+              alt="Product"
+              className="image-modal-image"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

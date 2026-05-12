@@ -1,0 +1,11 @@
+/**
+ * Configuration Babel pour Jest
+ * Fichier: .babelrc
+ */
+
+{
+  "presets": [
+    ["@babel/preset-env", { "targets": { "node": "current" } }],
+    ["@babel/preset-react", { "runtime": "automatic" }]
+  ]
+}

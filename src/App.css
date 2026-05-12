@@ -437,7 +437,6 @@ body {
 }
 
 body.dark-mode {
-  
   background: radial-gradient(circle at top left, #2e1a47, #1a1a3a);
   color: #ffffff; /* texte blanc pour contraste maximal */
 }
@@ -651,4 +650,216 @@ body.dark-mode .theme-switcher {
 .logout-btn:active {
   transform: translateY(0);
   box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
+}
+
+.refresh-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.refresh-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: linear-gradient(45deg, #27ae60, #229954);
+  color: white;
+  border: none;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 10px rgba(39, 174, 96, 0.3);
+  white-space: nowrap;
+}
+
+.refresh-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(39, 174, 96, 0.5);
+  background: linear-gradient(45deg, #229954, #1e8449);
+}
+
+.refresh-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
+}
+
+.refresh-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.refresh-icon {
+  font-size: 16px;
+  display: inline-block;
+}
+
+.refresh-btn.refreshing .refresh-icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.refresh-text {
+  font-size: 14px;
+}
+
+.last-refresh {
+  font-size: 12px;
+  color: #2c3e50;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Dark mode refresh header */
+body.dark-mode .refresh-header {
+  background: rgba(15, 18, 34, 0.7);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .last-refresh {
+  color: #e0e0e0;
+}
+
+/* Mobile responsiveness for refresh header */
+@media (max-width: 768px) {
+  .refresh-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .refresh-btn {
+    justify-content: center;
+    padding: 10px 15px;
+    font-size: 13px;
+  }
+
+  .last-refresh {
+    text-align: center;
+    font-size: 11px;
+  }
+}
+
+/* =====================================
+   PAGINATION STYLES
+   ===================================== */
+
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  padding: 20px 15px;
+  gap: 10px;
+}
+
+.load-more-btn {
+  background: linear-gradient(45deg, #009739, #ffdd00);
+  color: #2c3e50;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.load-more-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.load-more-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.load-more-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.load-more-btn .spinner {
+  display: inline-block;
+  animation: spin-fast 0.8s linear infinite;
+}
+
+.load-more-btn .icon {
+  font-size: 18px;
+}
+
+@keyframes spin-fast {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.pagination-end {
+  display: flex;
+  justify-content: center;
+  padding: 20px 15px;
+}
+
+.end-indicator {
+  background: rgba(0, 151, 57, 0.1);
+  border: 2px solid #009739;
+  color: #009739;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Dark mode pagination */
+body.dark-mode .load-more-btn {
+  background: linear-gradient(45deg, #00b84d, #ffdd00);
+  color: #0f1222;
+}
+
+body.dark-mode .end-indicator {
+  background: rgba(0, 184, 77, 0.1);
+  border-color: #00b84d;
+  color: #00b84d;
+}
+
+/* Mobile responsiveness for pagination */
+@media (max-width: 480px) {
+  .pagination-container {
+    padding: 15px 10px;
+  }
+
+  .load-more-btn {
+    width: 100%;
+    justify-content: center;
+    font-size: 14px;
+    padding: 10px 16px;
+  }
+
+  .load-more-btn .icon {
+    font-size: 16px;
+  }
+
+  .end-indicator {
+    font-size: 13px;
+    padding: 10px 15px;
+  }
 }

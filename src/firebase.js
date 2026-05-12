@@ -5,7 +5,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
 } from "firebase/auth";
-import { getDatabase, ref, set, get, push } from "firebase/database";
+import { getDatabase, ref, set, get, push, onValue } from "firebase/database";
 
 // Configuration Firebase
 const firebaseConfig = {
@@ -26,7 +26,14 @@ export const auth = getAuth(app);
 export const db = getDatabase(app);
 
 function generateEmailFromPhone(phone) {
-  const cleanPhone = phone.replace(/[^\d]/g, "");
+  // Remove all non-numeric characters
+  let cleanPhone = phone.replace(/[^\d]/g, "");
+
+  // If doesn't start with 242, prepend it
+  if (!cleanPhone.startsWith("242")) {
+    cleanPhone = "242" + cleanPhone;
+  }
+
   return `vendor${cleanPhone}@maman-power.app`;
 }
 
@@ -696,6 +703,313 @@ export const getAllDepotsWithAllProducts = async (vendorLat, vendorLon) => {
     return { success: true, data: depotsWithProducts };
   } catch (error) {
     console.error(" Erreur récupération complète depots:", error.message);
+    return { success: false, error: error.message };
+  }
+};
+
+// =====================================
+// 🔄 REALTIME LISTENERS (Zéro polling!)
+// =====================================
+
+/**
+ * Écouter les catégories en temps réel
+ * @param {function} onUpdate - Fonction appelée quand les catégories changent
+ * @returns {function} Fonction pour arrêter l'écoute
+ */
+export const listenToCategories = (onUpdate) => {
+  try {
+    console.log("🎧 Activation listener catégories...");
+    const categoriesRef = ref(db, "categories");
+
+    const unsubscribe = onValue(categoriesRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const categoriesData = snapshot.val();
+        const categories = Object.keys(categoriesData)
+          .filter((key) => categoriesData[key].is_active === true)
+          .map((key) => ({ id: key, ...categoriesData[key] }));
+
+        console.log(` 📦 ${categories.length} catégories reçues (realtime)`);
+        onUpdate(categories);
+      } else {
+        console.log(" Aucune catégorie trouvée");
+        onUpdate([]);
+      }
+    });
+
+    return unsubscribe;
+  } catch (error) {
+    console.error(" Erreur listener catégories:", error.message);
+    return () => {};
+  }
+};
+
+/**
+ * Écouter tous les dépôts + produits en temps réel
+ * @param {number} vendorLat - Latitude vendeur
+ * @param {number} vendorLon - Longitude vendeur
+ * @param {function} onUpdate - Fonction appelée quand données changent
+ * @returns {function} Fonction pour arrêter l'écoute (IMPORTANT: appeler au unmount!)
+ */
+export const listenToDepotsAndProducts = (vendorLat, vendorLon, onUpdate) => {
+  try {
+    console.log("🎧 Activation listener dépôts + produits...");
+    const depotsRef = ref(db, "depots");
+
+    const unsubscribe = onValue(depotsRef, async (snapshot) => {
+      if (snapshot.exists()) {
+        const depotsData = snapshot.val();
+        const allDepots = Object.keys(depotsData)
+          .filter(
+            (key) =>
+              depotsData[key].is_active === true &&
+              (depotsData[key].subscription_status === "active" ||
+                !depotsData[key].subscription_status), // ← Accepter aussi les dépôts sans ce champ (backward compatibility)
+          )
+          .map((key) => ({ id: key, ...depotsData[key] }));
+
+        console.log(
+          ` 🏪 ${allDepots.length} dépôts reçus (realtime) - chargement produits...`,
+        );
+
+        // Charger les produits EN PARALLELE
+        const depotsWithProductsPromises = allDepots.map(async (depot) => {
+          try {
+            let products = [];
+            const depotsProductsRef = ref(db, `depots/${depot.id}/products`);
+            const depotsProductsSnapshot = await get(depotsProductsRef);
+
+            if (depotsProductsSnapshot.exists()) {
+              const productsData = depotsProductsSnapshot.val();
+              products = Object.keys(productsData)
+                .filter((key) => productsData[key].is_active === true)
+                .map((key) => ({
+                  id: key,
+                  ...productsData[key],
+                }));
+            }
+
+            let lat = parseFloat(depot.latitude);
+            let lon = parseFloat(depot.longitude);
+
+            if (isNaN(lat) || isNaN(lon)) {
+              lat = -4.2726;
+              lon = 15.2663;
+            }
+
+            const distance = calculateDistance(vendorLat, vendorLon, lat, lon);
+
+            return {
+              ...depot,
+              distance: parseFloat(distance.toFixed(2)),
+              products: products,
+            };
+          } catch (error) {
+            console.error(` Erreur produits depot ${depot.id}:`, error.message);
+            return null;
+          }
+        });
+
+        const results = await Promise.all(depotsWithProductsPromises);
+        const depotsWithProducts = results
+          .filter((result) => result !== null)
+          .sort((a, b) => a.distance - b.distance);
+
+        console.log(
+          ` ✅ ${depotsWithProducts.length} dépôts avec produits (realtime)`,
+        );
+        onUpdate(depotsWithProducts);
+      } else {
+        console.log(" Aucun dépôt trouvé");
+        onUpdate([]);
+      }
+    });
+
+    return unsubscribe;
+  } catch (error) {
+    console.error(" Erreur listener dépôts:", error.message);
+    return () => {};
+  }
+};
+
+// =====================================
+// 💾 CACHING LOCALSTORAGE
+// =====================================
+
+const CACHE_KEY = "maman-power-cache";
+
+/**
+ * Sauvegarder les données dans localStorage
+ * @param {Array} categories - Catégories
+ * @param {Array} depots - Dépôts avec produits
+ */
+export const saveToCache = (categories, depots) => {
+  try {
+    const cacheData = {
+      categories: categories || [],
+      depots: depots || [],
+      lastSync: new Date().toISOString(),
+    };
+    localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
+    console.log(
+      ` 💾 Cache sauvegardé: ${categories?.length || 0} catégories, ${depots?.length || 0} dépôts`,
+    );
+  } catch (error) {
+    console.error(" Erreur sauvegarde cache:", error.message);
+  }
+};
+
+/**
+ * Charger les données du cache localStorage
+ * @returns {object} { categories, depots, lastSync } ou null
+ */
+export const loadFromCache = () => {
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (!cached) {
+      console.log(" Aucun cache trouvé");
+      return null;
+    }
+
+    const cacheData = JSON.parse(cached);
+    console.log(
+      ` 📦 Cache chargé: ${cacheData.categories?.length || 0} catégories, ${cacheData.depots?.length || 0} dépôts`,
+    );
+    console.log(`   Dernière sync: ${cacheData.lastSync}`);
+    return cacheData;
+  } catch (error) {
+    console.error(" Erreur lecture cache:", error.message);
+    return null;
+  }
+};
+
+/**
+ * Vider complètement le cache (pour logout par exemple)
+ */
+export const clearCache = () => {
+  try {
+    localStorage.removeItem(CACHE_KEY);
+    console.log(" 🗑️  Cache supprimé");
+  } catch (error) {
+    console.error(" Erreur suppression cache:", error.message);
+  }
+};
+
+// =====================================
+// 📄 PAGINATION DES DÉPÔTS
+// =====================================
+
+/**
+ * Charger les dépôts avec produits par pagination
+ * @param {number} vendorLat - Latitude vendeur
+ * @param {number} vendorLon - Longitude vendeur
+ * @param {number} pageSize - Nombre de dépôts par page (défaut: 20)
+ * @param {number} pageNumber - Numéro de page (commence à 0)
+ * @returns {Promise} { success, data: { depots, totalCount, hasMore }, error }
+ */
+export const getDepotsWithProductsPaginated = async (
+  vendorLat,
+  vendorLon,
+  pageSize = 20,
+  pageNumber = 0,
+) => {
+  try {
+    console.log(
+      `📄 Chargement dépôts pagés - Page ${pageNumber + 1} (${pageSize}/page)...`,
+    );
+
+    const depotsRef = ref(db, "depots");
+    const depotsSnapshot = await get(depotsRef);
+
+    if (!depotsSnapshot.exists()) {
+      return {
+        success: true,
+        data: { depots: [], totalCount: 0, hasMore: false },
+      };
+    }
+
+    const depotsData = depotsSnapshot.val();
+    const allDepots = Object.keys(depotsData)
+      .filter(
+        (key) =>
+          depotsData[key].is_active === true &&
+          (depotsData[key].subscription_status === "active" ||
+            !depotsData[key].subscription_status), // ← Accepter aussi les dépôts sans ce champ (backward compatibility)
+      )
+      .map((key) => ({ id: key, ...depotsData[key] }));
+
+    const totalCount = allDepots.length;
+    console.log(` Total: ${totalCount} dépôts actifs`);
+
+    // Calculer l'index de départ et fin
+    const startIndex = pageNumber * pageSize;
+    const endIndex = Math.min(startIndex + pageSize, totalCount);
+    const hasMore = endIndex < totalCount;
+
+    // Extraire la page actuelle
+    const pageDepots = allDepots.slice(startIndex, endIndex);
+    console.log(
+      ` Page: ${pageDepots.length} dépôts (${startIndex + 1} à ${endIndex}/${totalCount})`,
+    );
+
+    // Charger les produits EN PARALLELE pour cette page
+    const depotsWithProductsPromises = pageDepots.map(async (depot) => {
+      try {
+        let products = [];
+        const depotsProductsRef = ref(db, `depots/${depot.id}/products`);
+        const depotsProductsSnapshot = await get(depotsProductsRef);
+
+        if (depotsProductsSnapshot.exists()) {
+          const productsData = depotsProductsSnapshot.val();
+          products = Object.keys(productsData)
+            .filter((key) => productsData[key].is_active === true)
+            .map((key) => ({
+              id: key,
+              ...productsData[key],
+            }));
+        }
+
+        let lat = parseFloat(depot.latitude);
+        let lon = parseFloat(depot.longitude);
+
+        if (isNaN(lat) || isNaN(lon)) {
+          lat = -4.2726;
+          lon = 15.2663;
+        }
+
+        const distance = calculateDistance(vendorLat, vendorLon, lat, lon);
+
+        return {
+          ...depot,
+          distance: parseFloat(distance.toFixed(2)),
+          products: products,
+        };
+      } catch (error) {
+        console.error(` Erreur produits depot ${depot.id}:`, error.message);
+        return null;
+      }
+    });
+
+    const results = await Promise.all(depotsWithProductsPromises);
+    const depotsWithProducts = results
+      .filter((result) => result !== null)
+      .sort((a, b) => a.distance - b.distance);
+
+    console.log(
+      ` ✅ ${depotsWithProducts.length} dépôts chargés (has more: ${hasMore})`,
+    );
+
+    return {
+      success: true,
+      data: {
+        depots: depotsWithProducts,
+        totalCount: totalCount,
+        hasMore: hasMore,
+        pageNumber: pageNumber,
+        pageSize: pageSize,
+      },
+    };
+  } catch (error) {
+    console.error(" Erreur pagination dépôts:", error.message);
     return { success: false, error: error.message };
   }
 };
