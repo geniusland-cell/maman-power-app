@@ -1,41 +1,54 @@
-import { useState } from "react";
-import { loginByPhone, registerUser } from "../firebase.js";
+import React, { useState, ReactNode } from "react";
+import { loginByPhone, registerUser } from "../firebase";
+import type { User } from "../types";
 import "../auth.css";
 
-export default function UnifiedLogin({ onLoginSuccess }) {
-  const [phone, setPhone] = useState("");
-  const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [isRegistering, setIsRegistering] = useState(false);
+interface UnifiedLoginProps {
+  onLoginSuccess?: (user: User) => void;
+}
 
-  const handleLogin = async (e) => {
+export default function UnifiedLogin({
+  onLoginSuccess,
+}: UnifiedLoginProps): ReactNode {
+  const [phone, setPhone] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [name, setName] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
+  const [isRegistering, setIsRegistering] = useState<boolean>(false);
+
+  const handleLogin = async (
+    e: React.SubmitEvent<HTMLFormElement>,
+  ): Promise<void> => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
 
     try {
-      console.log("🔍 Tentative connexion par téléphone...");
+      console.log(" Tentative connexion par téléphone...");
       const loginResult = await loginByPhone(phone, password);
 
       if (loginResult.success) {
         console.log(" Connexion réussie!");
-        onLoginSuccess(loginResult.data);
+        onLoginSuccess?.(loginResult.data!);
         return;
       }
 
       setError(loginResult.error || "Connexion échouée");
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(" Erreur:", err);
-      setError(err.message || "Une erreur est survenue");
+      const errorMsg =
+        err instanceof Error ? err.message : "Une erreur est survenue";
+      setError(errorMsg);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleRegister = async (e) => {
+  const handleRegister = async (
+    e: React.SubmitEvent<HTMLFormElement>,
+  ): Promise<void> => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
@@ -60,22 +73,24 @@ export default function UnifiedLogin({ onLoginSuccess }) {
       }
 
       console.log(" Inscription en cours...");
-      const registerResult = await registerUser(name, email, phone, password);
+      const registerResult = await registerUser(name, phone, password);
 
       if (registerResult.success) {
         console.log(" Inscription réussie! Connexion automatique...");
 
         const loginResult = await loginByPhone(phone, password);
-        if (loginResult.success) {
-          onLoginSuccess(loginResult.data);
+        if (loginResult.success && loginResult.data) {
+          onLoginSuccess?.(loginResult.data);
         }
         return;
       }
 
       setError(registerResult.error || "Erreur d'inscription");
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(" Erreur inscription:", err);
-      setError(err.message || "Une erreur est survenue");
+      const errorMsg =
+        err instanceof Error ? err.message : "Une erreur est survenue";
+      setError(errorMsg);
     } finally {
       setIsLoading(false);
     }

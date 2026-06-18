@@ -629,6 +629,33 @@ body.dark-mode .theme-switcher {
   }
 }
 
+.voting-btn {
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #ffd700, #ff9f43);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 10px rgba(255, 159, 67, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.voting-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 159, 67, 0.5);
+  background: linear-gradient(135deg, #ffed4e, #ffbb47);
+}
+
+.voting-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(255, 159, 67, 0.3);
+}
+
 .logout-btn {
   padding: 10px 20px;
   background: linear-gradient(45deg, #009739, #ce1126);
@@ -862,4 +889,27 @@ body.dark-mode .end-indicator {
     font-size: 13px;
     padding: 10px 15px;
   }
+}
+
+/* Footer styles */
+.app-footer {
+  text-align: center;
+  padding: 20px 15px;
+  background: rgba(255, 255, 255, 0.9);
+  border-top: 1px solid #ddd;
+  margin-top: 40px;
+  font-size: 12px;
+  color: #666;
+}
+
+.app-footer p {
+  margin: 0;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+body.dark-mode .app-footer {
+  background: rgba(30, 30, 30, 0.95);
+  border-top-color: #444;
+  color: #aaa;
 }

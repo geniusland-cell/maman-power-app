@@ -1,42 +1,100 @@
-import React, { useState } from "react";
+import { useState, ReactNode } from "react";
+import type { DepotWithProducts } from "../types";
+import { optimizeThumbnail, optimizeModalImage } from "../utils/cloudinary";
 import "./DepotsList.css";
 
-export default function DepotsList({ depots }) {
-  const [selectedImage, setSelectedImage] = useState(null);
+interface DepotsListProps {
+  depots: DepotWithProducts[];
+  favorites: string[];
+  onToggleFavorite: (depotId: string) => void;
+  onVote?: (depotId: string) => Promise<void>; // Callback pour voter
+  userId?: string; 
+  votingEnabled?: boolean; 
+}
 
-  const handleCall = (phoneNumber) => {
+export default function DepotsList({
+  depots,
+  favorites,
+  onToggleFavorite,
+  onVote,
+  userId,
+  votingEnabled = false,
+}: DepotsListProps): ReactNode {
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [votingDepotId, setVotingDepotId] = useState<string | null>(null);
+  const [votingError, setVotingError] = useState<string | null>(null);
+
+  const handleCall = (phoneNumber: string): void => {
     navigator.clipboard
       .writeText(phoneNumber)
       .then(() => {
         alert(` Numéro copié: ${phoneNumber}\n\nAppel lancé...`);
-        // Lancer l'appel après confirmation
+        
         setTimeout(() => {
           window.location.href = `tel:${phoneNumber}`;
         }, 100);
       })
-      .catch((err) => {
+      .catch((err: Error) => {
         console.error("Erreur copie:", err);
       });
   };
 
-  const openImageModal = (imageUrl) => {
+  const openImageModal = (imageUrl: string): void => {
     setSelectedImage(imageUrl);
   };
 
-  const closeImageModal = () => {
+  const closeImageModal = (): void => {
     setSelectedImage(null);
   };
 
-  const getPlaceholderImage = (category) => {
-    const emojiMap = {
-      Poisson: "🐟",
-      Charbon: "⚫",
-      Boissons: "🍺",
-      Vivriers: "🌾",
-      Fruits: "🍌",
-    };
-    return emojiMap[category] || "📦";
+  const handleVote = async (depotId: string): Promise<void> => {
+    if (!votingEnabled || !onVote) {
+      setVotingError("Désolé, le vote n'est pas disponible actuellement");
+      return;
+    }
+
+    try {
+      setVotingDepotId(depotId);
+      setVotingError(null);
+      await onVote(depotId);
+      setVotingDepotId(null);
+      alert(" Merci pour votre vote!");
+    } catch (err) {
+      const errorMsg =
+        err instanceof Error ? err.message : "Erreur lors du vote";
+      setVotingError(errorMsg);
+      setVotingDepotId(null);
+      alert(` Erreur: ${errorMsg}`);
+    }
   };
+
+  const normalizeCategoryName = (categoryName: string): string => {
+    if (categoryName === "Poisson" || categoryName === "Viande") {
+      return "Poisson & Viande";
+    }
+    if (categoryName === "Fruits") {
+      return "Fruit et Legume";
+    }
+    if (categoryName === "Vivriers") {
+      return "Epiceries/Vivre secs";
+    }
+    return categoryName;
+  };
+
+  const getPlaceholderImage = (category: string): string => {
+    const normalized = normalizeCategoryName(category);
+    const emojiMap: Record<string, string> = {
+      "Poisson & Viande": "🧊",
+      Charbon: "🪵",
+      Boissons: "🍾",
+      "Epiceries/Vivre secs": "🛒",
+      "Fruit et Legume": "🍅",
+    };
+    return emojiMap[normalized] || "📦";
+  };
+
+  const displayCategory = (category: string): string =>
+    normalizeCategoryName(category);
 
   if (!depots || depots.length === 0) {
     return (
@@ -64,13 +122,24 @@ export default function DepotsList({ depots }) {
             >
               {isNearest && (
                 <div className="nearest-badge">
-                  ⭐ LE PLUS PROCHE ({depot.distance} km)
+                  Le plus proche ({depot.distance} km)
                 </div>
               )}
 
               <div className="depot-header">
+                <button
+                  className={`favorite-btn ${favorites.includes(depot.id) ? "active" : ""}`}
+                  onClick={() => onToggleFavorite(depot.id)}
+                  title={
+                    favorites.includes(depot.id)
+                      ? "Retirer des favoris"
+                      : "Ajouter aux favoris"
+                  }
+                >
+                  {favorites.includes(depot.id) ? "❤️" : "🤍"}
+                </button>
                 <h3 className="depot-name">{depot.name}</h3>
-                <span className="depot-distance">📏 {depot.distance} km</span>
+                <span className="depot-distance"> {depot.distance} km</span>
               </div>
 
               {/* Afficher les produits si disponibles */}
@@ -80,12 +149,18 @@ export default function DepotsList({ depots }) {
                     <div key={product.id} className="product-line">
                       {/* Product Image */}
                       <div className="product-image-container">
-                        {product.image ? (
+                        {product.image || product.image_url ? (
                           <img
-                            src={product.image}
+                            src={optimizeThumbnail(
+                              product.image || product.image_url!,
+                            )}
                             alt={product.name}
                             className="product-thumb"
-                            onClick={() => openImageModal(product.image)}
+                            onClick={() =>
+                              openImageModal(
+                                product.image || product.image_url!,
+                              )
+                            }
                             title="Cliquer pour agrandir"
                           />
                         ) : (
@@ -107,7 +182,7 @@ export default function DepotsList({ depots }) {
                       <div className="product-info-container">
                         <span className="product-name">{product.name}</span>
                         <span className="product-category">
-                          {product.category}
+                          {displayCategory(product.category)}
                         </span>
                         <span className="product-price">
                           Prix: {product.price} FCFA/{product.unit}
@@ -124,24 +199,24 @@ export default function DepotsList({ depots }) {
               <div className="depot-actions">
                 <button
                   className="action-btn call-btn"
-                  onClick={() => handleCall(depot.phone_direct)}
+                  onClick={() =>
+                    handleCall(depot.phone_direct || depot.phone || "")
+                  }
                   title="Appel direct"
+                  disabled={!depot.phone_direct && !depot.phone}
                 >
-                  <span className="action-icon">☎️</span>
+                  <span className="action-icon"></span>
                   <span className="action-text">Appeler</span>
                 </button>
 
                 <a
-                  href={`https://wa.me/${depot.phone_whatsapp.replace(
-                    /[^\d+]/g,
-                    "",
-                  )}`}
+                  href={`https://wa.me/${(depot.phone_whatsapp || depot.phone || "").replace(/[^\d+]/g, "")}`}
                   className="action-btn whatsapp-btn"
                   target="_blank"
                   rel="noopener noreferrer"
                   title="WhatsApp"
                 >
-                  <span className="action-icon">💬</span>
+                  <span className="action-icon"></span>
                   <span className="action-text">WhatsApp</span>
                 </a>
 
@@ -150,13 +225,31 @@ export default function DepotsList({ depots }) {
                   title="Voir plus"
                   onClick={() => {
                     alert(
-                      `📍 ${depot.name}\n\n📱 Direct: ${depot.phone_direct}\n💬 WhatsApp: ${depot.phone_whatsapp}\n\n📍 ${depot.address || depot.quartier}`,
+                      ` ${depot.name}\n\n Téléphone: ${depot.phone_direct || depot.phone || "N/A"}\n\n ${depot.location}`,
                     );
                   }}
                 >
-                  <span className="action-icon">ℹ️</span>
+                  <span className="action-icon"></span>
                   <span className="action-text">Infos</span>
                 </button>
+
+                {votingEnabled && (
+                  <button
+                    className="action-btn vote-btn"
+                    onClick={() => handleVote(depot.id)}
+                    disabled={votingDepotId === depot.id}
+                    title="Voter pour ce dépôt"
+                  >
+                    <span className="action-icon">
+                      {votingDepotId === depot.id ? "⏳" : "🗳️"}
+                    </span>
+                    <span className="action-text">
+                      {votingDepotId === depot.id
+                        ? "Vote..."
+                        : `Vote (${depot.current_votes || 0})`}
+                    </span>
+                  </button>
+                )}
               </div>
             </div>
           );
@@ -174,7 +267,7 @@ export default function DepotsList({ depots }) {
               ✕
             </button>
             <img
-              src={selectedImage}
+              src={optimizeModalImage(selectedImage)}
               alt="Product"
               className="image-modal-image"
             />
