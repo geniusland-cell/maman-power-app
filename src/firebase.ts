@@ -355,7 +355,24 @@ export const getVotingRankings = async (): Promise<
       .sort((a, b) => b.vote_count - a.vote_count)
       .slice(0, 10);
 
-    return ranked;
+    // Enrichir avec les noms des dépôts
+    const enriched = await Promise.all(
+      ranked.map(async (item) => {
+        try {
+          const depotRef = ref(db, `depots/${item.depotId}`);
+          const depotSnapshot = await get(depotRef);
+          const depotData = depotSnapshot.val();
+          return {
+            ...item,
+            depot_name: depotData?.name || `Dépôt ${item.depotId}`,
+          };
+        } catch {
+          return item;
+        }
+      }),
+    );
+
+    return enriched;
   } catch (err) {
     console.error(" Erreur récupération classement:", err);
     return [];
@@ -977,7 +994,7 @@ export const listenToDepotsAndProducts = (
     console.log("🎧 Activation listener dépôts + produits...");
     const depotsRef = ref(db, "depots");
 
-    let debounceTimer: number | null = null;
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
     let lastUpdate = 0;
     let lastDepotSnapshot: any = null; // CACHE: mémoriser le snapshot précédent
     const productCache = new Map<string, any>(); // CACHE: mémoriser les produits par dépôt

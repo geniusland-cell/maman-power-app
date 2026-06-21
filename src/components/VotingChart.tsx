@@ -1,14 +1,39 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { getVotingRankings, getCurrentQuarter } from "../firebase";
-import { ref, get, onValue } from "firebase/database";
+import { ref, onValue, get } from "firebase/database";
 import { db } from "../firebase";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 import "./VotingChart.css";
 
-const VotingChart = ({ isOpen, onClose }) => {
-  const [rankings, setRankings] = useState([]);
+interface VotingChartProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+interface ChartData {
+  name: string;
+  votes: number;
+}
+
+interface RankingData {
+  depotId: string;
+  depot_name?: string;
+  vote_count: number;
+}
+
+const VotingChart = ({ isOpen, onClose }: VotingChartProps) => {
+  const [rankings, setRankings] = useState<RankingData[]>([]);
   const [loading, setLoading] = useState(true);
   const [quarter, setQuarter] = useState("");
-  const [chartData, setChartData] = useState([]);
+  const [chartData, setChartData] = useState<ChartData[]>([]);
 
   // Charger les données en temps réel
   useEffect(() => {
@@ -28,17 +53,42 @@ const VotingChart = ({ isOpen, onClose }) => {
         // Listener pour updates en temps réel
         const unsubscribe = onValue(
           votesRef,
-          (snapshot) => {
+          async (snapshot) => {
             if (snapshot.exists()) {
               const votesData = snapshot.val();
+              // Récupérer les noms des dépôts depuis Firebase
+              const depotIds = Object.keys(votesData).filter(
+                (key) => key !== "metadata",
+              );
+              const depotNames: Record<string, string> = {};
+
+              for (const depotId of depotIds) {
+                try {
+                  const depotRef = ref(db, `depots/${depotId}`);
+                  const depotSnapshot = await get(depotRef);
+                  if (depotSnapshot.exists()) {
+                    const depotData = depotSnapshot.val();
+                    depotNames[depotId] = depotData.depot_name || depotId;
+                  } else {
+                    depotNames[depotId] = depotId;
+                  }
+                } catch (error) {
+                  console.error(
+                    `Erreur récupération nom dépôt ${depotId}:`,
+                    error,
+                  );
+                  depotNames[depotId] = depotId;
+                }
+              }
+
               // Transformer en données pour le graphique (top 5 dépôts)
               const topDepots = Object.entries(votesData)
                 .filter(([key]) => key !== "metadata")
-                .map(([depotId, data]) => ({
-                  depotId,
-                  vote_count: data.vote_count || 0,
+                .map(([depotId, data]: [string, any]) => ({
+                  name: depotNames[depotId] || depotId,
+                  votes: data.vote_count || 0,
                 }))
-                .sort((a, b) => b.vote_count - a.vote_count)
+                .sort((a, b) => b.votes - a.votes)
                 .slice(0, 5);
 
               setChartData(topDepots);
@@ -66,32 +116,25 @@ const VotingChart = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   const maxVotes = Math.max(
-    ...[
-      ...chartData.map((d) => d.vote_count),
-      ...rankings.map((d) => d.vote_count),
-    ],
+    ...[...chartData.map((d) => d.votes), ...rankings.map((d) => d.vote_count)],
     1,
   );
 
-  // Générer les points SVG pour le graphique en courbe
-  const generatePath = () => {
-    if (chartData.length === 0) return "";
+  // Fixer l'échelle max à 15 pour progression visible
+  const yAxisMax = Math.max(maxVotes, 15);
 
-    const chartWidth = 500;
-    const chartHeight = 250;
-    const padding = 40;
-    const points = chartData.map((depot, index) => {
-      const x =
-        (index / (chartData.length - 1 || 1)) * (chartWidth - 2 * padding) +
-        padding;
-      const y =
-        chartHeight -
-        (depot.vote_count / maxVotes) * (chartHeight - 2 * padding);
-      return `${x},${y}`;
-    });
-
-    return `M ${points.join(" L ")}`;
-  };
+  // Préparer les données avec couleurs pour le top 3
+  const chartDataWithColors = chartData.map((item, index) => ({
+    ...item,
+    fill:
+      index === 0
+        ? "#FFD700"
+        : index === 1
+          ? "#C0C0C0"
+          : index === 2
+            ? "#CD7F32"
+            : "#4CAF50",
+  }));
 
   return (
     <div className="voting-chart-overlay" onClick={onClose}>
@@ -121,83 +164,57 @@ const VotingChart = ({ isOpen, onClose }) => {
             </div>
           ) : (
             <>
-              {/* Graphique en courbe */}
+              {/* Graphique en barres verticales */}
               <div className="graph-container">
                 <h2>Tendance des Votes (Top 5)</h2>
-                <svg width="600" height="350" className="chart-svg">
-                  {/* Grille */}
-                  <defs>
-                    <pattern
-                      id="grid"
-                      width="50"
-                      height="25"
-                      patternUnits="userSpaceOnUse"
-                    >
-                      <path d="M 50 0 L 0 0 0 25" fill="none" stroke="#eee" />
-                    </pattern>
-                  </defs>
-                  <rect width="600" height="350" fill="url(#grid)" />
-
-                  {/* Axes */}
-                  <line x1="40" y1="10" x2="40" y2="300" stroke="#333" />
-                  <line x1="40" y1="300" x2="580" y2="300" stroke="#333" />
-
-                  {/* Labels axes */}
-                  <text x="20" y="160" fontSize="12" fill="#666">
-                    Votes
-                  </text>
-                  <text x="300" y="330" fontSize="12" fill="#666">
-                    Dépôts (Top 5)
-                  </text>
-
-                  {/* Courbe */}
-                  {chartData.length > 0 && (
-                    <path
-                      d={generatePath()}
-                      fill="none"
-                      stroke="#4CAF50"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart
+                    data={chartDataWithColors}
+                    barSize={16}
+                    margin={{ top: 10, right: 20, left: 30, bottom: 30 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                    <XAxis
+                      dataKey="name"
+                      tick={{ fontSize: 11, fill: "#666" }}
+                      axisLine={{ stroke: "#ccc" }}
+                      tickLine={{ stroke: "#ccc" }}
+                      angle={-45}
+                      textAnchor="end"
+                      height={60}
                     />
-                  )}
-
-                  {/* Points */}
-                  {chartData.length > 0 &&
-                    chartData.map((depot, index) => {
-                      const x =
-                        (index / (chartData.length - 1 || 1)) * 540 + 40;
-                      const y = 300 - (depot.vote_count / maxVotes) * 290;
-                      return (
-                        <g key={depot.depotId}>
-                          <circle
-                            cx={x}
-                            cy={y}
-                            r="6"
-                            fill="#4CAF50"
-                            stroke="#fff"
-                            strokeWidth="2"
-                          />
-                          <text
-                            x={x}
-                            y={y - 15}
-                            fontSize="12"
-                            fill="#333"
-                            textAnchor="middle"
-                          >
-                            {depot.vote_count}
-                          </text>
-                        </g>
-                      );
-                    })}
-                </svg>
+                    <YAxis
+                      domain={[0, yAxisMax]}
+                      tick={{ fontSize: 11, fill: "#666" }}
+                      axisLine={{ stroke: "#ccc" }}
+                      tickLine={{ stroke: "#ccc" }}
+                      tickCount={6}
+                      width={30}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#fff",
+                        border: "1px solid #ddd",
+                        borderRadius: "4px",
+                        fontSize: "11px",
+                      }}
+                    />
+                    <Bar
+                      dataKey="votes"
+                      fill="#4CAF50"
+                      fillOpacity={0.8}
+                      animationDuration={1000}
+                      animationEasing="ease-in-out"
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
 
               {/* Classement avec barres */}
               <div className="rankings-list">
                 <h2>Classement Complet</h2>
                 {rankings.map((depot, index) => {
-                  const percentage = (depot.vote_count / maxVotes) * 100;
+                  const percentage = (depot.vote_count / yAxisMax) * 100;
                   const medalEmoji =
                     index === 0
                       ? "🥇"
@@ -221,7 +238,11 @@ const VotingChart = ({ isOpen, onClose }) => {
                         <div className="bar-container">
                           <div
                             className="bar-fill"
-                            style={{ width: `${percentage}%` }}
+                            style={{
+                              width: `${percentage}%`,
+                              animation: `fillBar 1s ease-in-out forwards`,
+                              animationDelay: `${index * 0.1}s`,
+                            }}
                           >
                             {percentage > 10 && (
                               <span className="bar-text">

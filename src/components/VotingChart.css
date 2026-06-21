@@ -45,6 +45,15 @@
   }
 }
 
+@keyframes fillBar {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
 .chart-header {
   display: flex;
   justify-content: space-between;

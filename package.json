@@ -18,9 +18,11 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.102.1",
     "firebase": "^12.12.1",
-    "firebase-admin": "^13.10.0",
+    "firebase-admin": "^14.0.0",
     "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "react-dom": "^19.2.4",
+    "react-is": "^19.2.7",
+    "recharts": "^3.8.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",

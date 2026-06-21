@@ -1,5 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { getVotingRankings, getCurrentQuarter } from "../firebase";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+} from "recharts";
 import "./VotingStats.css";
 
 const VotingStats = ({ isOpen, onClose }) => {
@@ -29,7 +39,20 @@ const VotingStats = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
-  const maxVotes = rankings.length > 0 ? rankings[0].vote_count : 1;
+  // Transformer les données pour Recharts
+  const chartData = rankings.map((depot, index) => ({
+    name: depot.depot_name || `Dépôt ${index + 1}`,
+    votes: depot.vote_count,
+    rank: index + 1,
+  }));
+
+  // Couleurs pour les barres (or pour le 1er, argent pour le 2ème, bronze pour le 3ème)
+  const getBarColor = (index) => {
+    if (index === 0) return "#FFD700"; // Or
+    if (index === 1) return "#C0C0C0"; // Argent
+    if (index === 2) return "#CD7F32"; // Bronze
+    return "#4F46E5"; // Bleu par défaut
+  };
 
   return (
     <div className="voting-stats-overlay" onClick={onClose}>
@@ -58,55 +81,48 @@ const VotingStats = ({ isOpen, onClose }) => {
               </p>
             </div>
           ) : (
-            <div className="rankings-list">
-              {rankings.map((depot, index) => {
-                const percentage = (depot.vote_count / maxVotes) * 100;
-                const medalEmoji =
-                  index === 0
-                    ? "🥇"
-                    : index === 1
-                      ? "🥈"
-                      : index === 2
-                        ? "🥉"
-                        : "📍";
-
-                return (
-                  <div key={depot.depotId} className="ranking-item">
-                    <div className="ranking-position">
-                      <span className="medal">{medalEmoji}</span>
-                      <span className="position">#{index + 1}</span>
-                    </div>
-
-                    <div className="ranking-info">
-                      <div className="depot-name">
-                        {depot.depot_name || `Dépôt ${index + 1}`}
-                      </div>
-                      <div className="bar-container">
-                        <div
-                          className="bar-fill"
-                          style={{ width: `${percentage}%` }}
-                        >
-                          {percentage > 10 && (
-                            <span className="bar-text">{depot.vote_count}</span>
-                          )}
-                        </div>
-                        {percentage <= 10 && (
-                          <span className="vote-count-label">
-                            {depot.vote_count}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="ranking-stats">
-                      <span className="vote-label">
-                        {depot.vote_count} vote
-                        {depot.vote_count !== 1 ? "s" : ""}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="chart-container">
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart
+                  data={chartData}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                  <XAxis
+                    dataKey="name"
+                    angle={-45}
+                    textAnchor="end"
+                    height={100}
+                    interval={0}
+                    tick={{ fontSize: 12, fill: "#666" }}
+                  />
+                  <YAxis
+                    label={{
+                      value: "Votes",
+                      angle: -90,
+                      position: "insideLeft",
+                    }}
+                    tick={{ fontSize: 12, fill: "#666" }}
+                  />
+                  <Tooltip
+                    formatter={(value, name) => [
+                      `${value} votes`,
+                      "Nombre de votes",
+                    ]}
+                    contentStyle={{
+                      backgroundColor: "#fff",
+                      border: "1px solid #ddd",
+                      borderRadius: "8px",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                    }}
+                  />
+                  <Bar dataKey="votes" radius={[8, 8, 0, 0]}>
+                    {chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={getBarColor(index)} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           )}
         </div>

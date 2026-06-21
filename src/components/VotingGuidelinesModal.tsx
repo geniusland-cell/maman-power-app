@@ -1,5 +1,10 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import "./VotingGuidelinesModal.css";
+
+interface VotingGuidelinesModalProps {
+  onAccept: () => void;
+  daysLeft: number;
+}
 
 const getCurrentQuarter = () => {
   const month = new Date().getMonth() + 1;
@@ -8,7 +13,10 @@ const getCurrentQuarter = () => {
   return `${year}-Q${quarter}`;
 };
 
-const VotingGuidelinesModal = ({ onAccept, daysLeft }) => {
+const VotingGuidelinesModal = ({
+  onAccept,
+  daysLeft,
+}: VotingGuidelinesModalProps) => {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const handleAccept = () => {
