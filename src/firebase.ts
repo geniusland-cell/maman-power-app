@@ -23,6 +23,20 @@ import type {
   DepotWithProducts,
 } from "./types";
 
+const isDevelopment = import.meta.env.DEV;
+
+const safeLog = (message: string, ...args: unknown[]) => {
+  if (isDevelopment) {
+    console.log(message, ...args);
+  }
+};
+
+const safeError = (message: string, ...args: unknown[]) => {
+  if (isDevelopment) {
+    console.error(message, ...args);
+  }
+};
+
 // Configuration Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyDAv53Bv6a8iYVsZAWvljxUI2qlhp4n5W4",
@@ -64,11 +78,45 @@ export const loadQuartiersCache = async (): Promise<void> => {
           });
         }
       });
-
-      console.log(` Cache quartiers chargé: ${quartiersCache.size} quartiers`);
     }
   } catch (err) {
-    console.error(" Erreur chargement cache quartiers:", err);
+    safeError(" Erreur chargement cache quartiers:", err);
+  }
+};
+
+export const backfillDepotCoordinates = async (): Promise<void> => {
+  try {
+    const depotsRef = ref(db, "depots");
+    const snapshot = await get(depotsRef);
+
+    if (!snapshot.exists()) {
+      return;
+    }
+
+    const depotsData = snapshot.val();
+    const updates: Record<string, Record<string, unknown>> = {};
+
+    Object.entries(depotsData).forEach(([depotId, depot]: [string, any]) => {
+      const hasCoordinates =
+        typeof depot?.latitude === "number" &&
+        typeof depot?.longitude === "number";
+
+      if (hasCoordinates || !depot?.quartier) {
+        return;
+      }
+
+      const coords = getQuartierCoordinates(depot.quartier);
+      updates[depotId] = {
+        latitude: coords.lat,
+        longitude: coords.lon,
+      };
+    });
+
+    if (Object.keys(updates).length > 0) {
+      await update(ref(db, "depots"), updates);
+    }
+  } catch (err) {
+    safeError(" Erreur backfill coordonnées dépôts:", err);
   }
 };
 
@@ -87,7 +135,7 @@ const getQuartierCoordinates = (
   }
 
   // Si le quartier n'est pas dans le cache, fallback
-  console.warn(
+  safeLog(
     ` Quartier "${quartierName}" pas trouvé dans le cache, utilisation fallback`,
   );
   return { lat: -4.2726, lon: 15.2663 };
@@ -194,11 +242,9 @@ export const initializeVotingStructure = async (): Promise<void> => {
         end_date: endDate.toISOString().split("T")[0],
         created_at: new Date().toISOString(),
       });
-
-      console.log(` ✓ Structure votes créée pour ${quarter}`);
     }
   } catch (err) {
-    console.error(" Erreur initialisation votes:", err);
+    safeError(" Erreur initialisation votes:", err);
   }
 };
 
@@ -213,17 +259,23 @@ export const isVotingActive = async (): Promise<{
 }> => {
   try {
     const currentQuarter = getCurrentQuarter();
-    const votesRef = ref(db, `votes/${currentQuarter}/metadata`);
-    const snapshot = await get(votesRef);
+    const votesSettingsRef = ref(db, `votes_settings/${currentQuarter}`);
+    const snapshot = await get(votesSettingsRef);
 
     if (!snapshot.exists()) {
-      // Initialiser la structure
       await initializeVotingStructure();
-      return { active: true, daysLeft: 90, currentQuarter };
+      return { active: false, daysLeft: 0, currentQuarter };
     }
 
-    const { end_date } = snapshot.val();
-    const endDate = new Date(end_date);
+    const data = snapshot.val() || {};
+    const status = data.status || "PENDING";
+    const endsAt = data.ends_at;
+
+    if (status !== "VOTING_ACTIVE" || !endsAt) {
+      return { active: false, daysLeft: 0, currentQuarter };
+    }
+
+    const endDate = new Date(endsAt);
     const now = new Date();
     const daysLeft = Math.ceil(
       (endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
@@ -235,8 +287,55 @@ export const isVotingActive = async (): Promise<{
       currentQuarter,
     };
   } catch (err) {
-    console.error(" Erreur vérification vote actif:", err);
+    safeError(" Erreur vérification vote actif:", err);
     return { active: false, daysLeft: 0, currentQuarter: getCurrentQuarter() };
+  }
+};
+
+/**
+ * Écouter le statut des votes en temps réel depuis Firebase
+ * @param callback Fonction appelée à chaque changement de statut
+ * @returns Fonction de désabonnement
+ */
+export const listenToVotingStatus = (
+  callback: (status: "PENDING" | "VOTING_ACTIVE" | "VOTING_CLOSED") => void,
+) => {
+  const currentQuarter = getCurrentQuarter();
+  const votesSettingsRef = ref(db, `votes_settings/${currentQuarter}`);
+
+  const unsubscribe = onValue(votesSettingsRef, (snapshot) => {
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      const status = data.status || "PENDING";
+      callback(status);
+    } else {
+      callback("PENDING");
+    }
+  });
+
+  return unsubscribe;
+};
+
+/**
+ * Obtenir le statut actuel des votes
+ */
+export const getVotingStatus = async (): Promise<
+  "PENDING" | "VOTING_ACTIVE" | "VOTING_CLOSED"
+> => {
+  try {
+    const currentQuarter = getCurrentQuarter();
+    const votesSettingsRef = ref(db, `votes_settings/${currentQuarter}`);
+    const snapshot = await get(votesSettingsRef);
+
+    if (!snapshot.exists()) {
+      return "PENDING";
+    }
+
+    const data = snapshot.val();
+    return data.status || "PENDING";
+  } catch (err) {
+    safeError("Erreur récupération statut vote:", err);
+    return "PENDING";
   }
 };
 
@@ -268,7 +367,7 @@ const hasUserVotedThisQuarter = async (userId: string): Promise<boolean> => {
 
     return false;
   } catch (err) {
-    console.error(" Erreur vérification vote trimestre:", err);
+    safeError(" Erreur vérification vote trimestre:", err);
     return false;
   }
 };
@@ -286,7 +385,6 @@ export const voteForDepot = async (
   try {
     const currentQuarter = getCurrentQuarter();
 
-    // ✅ CORRECTION: Vérifier que l'utilisateur n'a pas déjà voté CE TRIMESTRE
     const hasVoted = await hasUserVotedThisQuarter(userId);
     if (hasVoted) {
       return {
@@ -314,11 +412,10 @@ export const voteForDepot = async (
       });
     }
 
-    console.log(` Vote enregistré pour dépôt ${depotId}`);
     return { success: true };
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Erreur inconnue";
-    console.error(" Erreur vote dépôt:", errorMsg);
+    safeError(" Erreur vote dépôt:", errorMsg);
     return { success: false, error: errorMsg };
   }
 };
@@ -355,7 +452,6 @@ export const getVotingRankings = async (): Promise<
       .sort((a, b) => b.vote_count - a.vote_count)
       .slice(0, 10);
 
-    // Enrichir avec les noms des dépôts
     const enriched = await Promise.all(
       ranked.map(async (item) => {
         try {
@@ -364,7 +460,10 @@ export const getVotingRankings = async (): Promise<
           const depotData = depotSnapshot.val();
           return {
             ...item,
-            depot_name: depotData?.name || `Dépôt ${item.depotId}`,
+            depot_name:
+              depotData?.depot_name ||
+              depotData?.name ||
+              `Dépôt ${item.depotId}`,
           };
         } catch {
           return item;
@@ -374,7 +473,7 @@ export const getVotingRankings = async (): Promise<
 
     return enriched;
   } catch (err) {
-    console.error(" Erreur récupération classement:", err);
+    safeError(" Erreur récupération classement:", err);
     return [];
   }
 };
@@ -401,20 +500,16 @@ export const upgradeToPremium = async (
       payment_pending: true,
     });
 
-    console.log(
-      ` Dépôt ${depotId} mis à niveau en ${tier} jusqu'au ${premiumUntil.toISOString()}`,
-    );
     return { success: true };
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Erreur inconnue";
-    console.error(" Erreur upgrade premium:", errorMsg);
+    safeError(" Erreur upgrade premium:", errorMsg);
     return { success: false, error: errorMsg };
   }
 };
 
 function generateEmailFromPhone(phone: string): string {
   let cleanPhone = phone.replace(/[^\d]/g, "");
-  // zi le num ne commnece pas par +242 alors l ajouter auto.....
   if (!cleanPhone.startsWith("242")) {
     cleanPhone = "242" + cleanPhone;
   }
@@ -443,15 +538,12 @@ export const registerUser = async (
     }
 
     const userEmail = generateEmailFromPhone(phone);
-    console.log(" Inscription pour", phone, "→", userEmail);
 
     const { user: authUser } = await createUserWithEmailAndPassword(
       auth,
       userEmail,
       password,
     );
-
-    console.log(" Compte Auth créé. UID:", authUser.uid);
 
     const userRef = ref(db, `users/${authUser.uid}`);
     await set(userRef, {
@@ -466,8 +558,6 @@ export const registerUser = async (
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     });
-
-    console.log(" Profil utilisateur créé dans Realtime DB");
 
     return {
       success: true,
@@ -484,7 +574,7 @@ export const registerUser = async (
     };
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Erreur inconnue";
-    console.error(" Erreur d'inscription:", errorMsg);
+    safeError(" Erreur d'inscription:", errorMsg);
     return { success: false, error: errorMsg };
   }
 };
@@ -494,8 +584,6 @@ export const loginByPhone = async (
   password: string,
 ): Promise<FirebaseResponse<User>> => {
   try {
-    console.log(" Tentative de connexion pour:", phone);
-
     const userEmail = generateEmailFromPhone(phone);
 
     const { user: authUser } = await signInWithEmailAndPassword(
@@ -504,18 +592,15 @@ export const loginByPhone = async (
       password,
     );
 
-    console.log(" Authentification réussie pour:", phone);
-
     const userRef = ref(db, `users/${authUser.uid}`);
     const userSnap = await get(userRef);
 
     if (!userSnap.exists()) {
-      console.error(" Profil non trouvé:", authUser.uid);
+      safeError(" Profil non trouvé:", authUser.uid);
       return { success: false, error: "Profil utilisateur non trouvé" };
     }
 
     const userData = userSnap.val();
-    console.log(" Profil chargé:", userData.name);
 
     return {
       success: true,
@@ -523,7 +608,7 @@ export const loginByPhone = async (
     };
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Erreur inconnue";
-    console.error(" Erreur de connexion:", errorMsg);
+    safeError(" Erreur de connexion:", errorMsg);
     return { success: false, error: "Numéro ou mot de passe incorrect" };
   }
 };
@@ -531,11 +616,10 @@ export const loginByPhone = async (
 export const logoutUser = async (): Promise<FirebaseResponse<null>> => {
   try {
     await signOut(auth);
-    console.log(" Déconnexion réussie");
     return { success: true };
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Erreur inconnue";
-    console.error(" Erreur déconnexion:", errorMsg);
+    safeError(" Erreur déconnexion:", errorMsg);
     return { success: false, error: errorMsg };
   }
 };
@@ -553,7 +637,7 @@ export const getCurrentUser = async (
     return { success: false, error: "Utilisateur non trouvé" };
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Erreur inconnue";
-    console.error(" Erreur récupération utilisateur:", errorMsg);
+    safeError(" Erreur récupération utilisateur:", errorMsg);
     return { success: false, error: errorMsg };
   }
 };
@@ -578,6 +662,23 @@ function calculateDistance(
   return R * c;
 }
 
+const isDepotVisible = (depot: any): boolean => {
+  if (depot.is_active !== true) return false;
+
+  if (depot.payment_pending === true) return false;
+
+  const now = new Date();
+  const hasExpiredSubscription =
+    depot.subscription_expiry && new Date(depot.subscription_expiry) <= now;
+
+  if (hasExpiredSubscription) return false;
+
+  const hasActiveSubscription =
+    depot.subscription_status === "active" || !depot.subscription_status;
+
+  return hasActiveSubscription;
+};
+
 // obtenir les depot avec leur disrrtance
 
 export const getDepotsWithDistance = async (
@@ -594,10 +695,19 @@ export const getDepotsWithDistance = async (
 
     const depotsData = snapshot.val();
     const depots = Object.keys(depotsData)
-      .filter((key) => depotsData[key].is_active === true)
+      .filter((key) => isDepotVisible(depotsData[key]))
       .map((key) => {
         const depot = depotsData[key];
-        const coords = getQuartierCoordinates(depot.quartier);
+        const depotLat =
+          typeof depot.latitude === "number" ? depot.latitude : undefined;
+        const depotLon =
+          typeof depot.longitude === "number" ? depot.longitude : undefined;
+
+        const coords =
+          depotLat !== undefined && depotLon !== undefined
+            ? { lat: depotLat, lon: depotLon }
+            : getQuartierCoordinates(depot.quartier);
+
         const distance = calculateDistance(
           vendorLat,
           vendorLon,
@@ -615,7 +725,7 @@ export const getDepotsWithDistance = async (
     return { success: true, data: depots };
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Erreur inconnue";
-    console.error(" Erreur récupération dépôts avec distance:", errorMsg);
+    safeError(" Erreur récupération dépôts avec distance:", errorMsg);
     return { success: false, error: errorMsg };
   }
 };
@@ -640,16 +750,8 @@ export const getDepotsByTierAndCategory = async (
 
     let depots = response.data;
 
-    // Filtrer par active et subscription
-    depots = depots.filter((depot) => {
-      const isActive = depot.is_active === true;
-      const hasActiveSubscription = depot.subscription_status === "active";
-      const subscriptionNotExpired =
-        !depot.subscription_expiry ||
-        new Date(depot.subscription_expiry) > new Date();
-
-      return isActive && hasActiveSubscription && subscriptionNotExpired;
-    });
+    // Filtrer par visibilité métier : actif, non expiré, non en attente
+    depots = depots.filter((depot) => isDepotVisible(depot));
 
     // Si catégorie spécifiée, appliquer filtrage par tier
     if (category) {
@@ -694,7 +796,7 @@ export const getDepotsByTierAndCategory = async (
     return { success: true, data: depots };
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Erreur inconnue";
-    console.error(" Erreur filtrage dépôts par tier:", errorMsg);
+    safeError(" Erreur filtrage dépôts par tier:", errorMsg);
     return { success: false, error: errorMsg };
   }
 };
@@ -716,7 +818,7 @@ export const getDepots = async (): Promise<FirebaseResponse<Depot[]>> => {
     return { success: true, data: depots };
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Erreur inconnue";
-    console.error(" Erreur récupération dépôts:", errorMsg);
+    safeError(" Erreur récupération dépôts:", errorMsg);
     return { success: false, error: errorMsg };
   }
 };
@@ -740,7 +842,7 @@ export const getCategories = async (): Promise<
     return { success: true, data: categories };
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Erreur inconnue";
-    console.error(" Erreur récupération catégories:", errorMsg);
+    safeError(" Erreur récupération catégories:", errorMsg);
     return { success: false, error: errorMsg };
   }
 };
@@ -751,8 +853,6 @@ export const getDepotsWithProductsByCategory = async (
   categoryName: string,
 ): Promise<FirebaseResponse<DepotWithProducts[]>> => {
   try {
-    console.log(`📍 Recherche dépôts avec catégorie: ${categoryName}`);
-
     const depotsRef = ref(db, "depots");
     const depotsSnapshot = await get(depotsRef);
 
@@ -764,8 +864,6 @@ export const getDepotsWithProductsByCategory = async (
     const allDepots = Object.keys(depotsData)
       .filter((key) => depotsData[key].is_active === true)
       .map((key) => ({ id: key, ...depotsData[key] }));
-
-    console.log(` Trouvé ${allDepots.length} depots actifs`);
 
     //  Pour chaque depot, chercher les produits EN PARALLELE (plus rapide!)
     const depotsWithProductsPromises = allDepots.map(async (depot) => {
@@ -785,10 +883,6 @@ export const getDepotsWithProductsByCategory = async (
               id: key,
               ...productsData[key],
             }));
-
-          console.log(
-            `   Dépôt ${depot.name}: ${products.length} produits (from depots/{id}/products)`,
-          );
         } else {
           // Strategie 2: Si pas de produits dans le depot, chercher dans les produits centralisés
           const productsRef = ref(db, "products");
@@ -803,10 +897,6 @@ export const getDepotsWithProductsByCategory = async (
                 id: key,
                 ...allProductsData[key],
               }));
-
-            console.log(
-              `   Dépôt ${depot.name}: ${products.length} produits (from root products/)`,
-            );
           }
         }
 
@@ -821,10 +911,6 @@ export const getDepotsWithProductsByCategory = async (
             coords.lon,
           );
 
-          console.log(
-            `   Distance: ${distance.toFixed(2)} km pour ${depot.name}`,
-          );
-
           return {
             ...depot,
             distance: parseFloat(distance.toFixed(2)),
@@ -835,7 +921,7 @@ export const getDepotsWithProductsByCategory = async (
         return null;
       } catch (err: unknown) {
         const errorMsg = err instanceof Error ? err.message : "Erreur inconnue";
-        console.error(
+        safeError(
           ` Erreur récupération produits pour dépôt ${depot.id}:`,
           errorMsg,
         );
@@ -848,14 +934,10 @@ export const getDepotsWithProductsByCategory = async (
     const depotsWithProducts = results.filter((result) => result !== null);
     depotsWithProducts.sort((a, b) => a.distance - b.distance);
 
-    console.log(
-      ` Trouvé ${depotsWithProducts.length} dépôts avec catégorie "${categoryName}"`,
-    );
-
     return { success: true, data: depotsWithProducts };
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Erreur inconnue";
-    console.error(
+    safeError(
       " Erreur récupération dépôts avec produits par catégorie:",
       errorMsg,
     );
@@ -869,8 +951,6 @@ export const getAllDepotsWithAllProducts = async (
   vendorLon: number,
 ): Promise<FirebaseResponse<DepotWithProducts[]>> => {
   try {
-    console.log(" Chargement COMPLET des dépôts + produits (optimisé)...");
-
     const depotsRef = ref(db, "depots");
     const depotsSnapshot = await get(depotsRef);
 
@@ -882,8 +962,6 @@ export const getAllDepotsWithAllProducts = async (
     const allDepots = Object.keys(depotsData)
       .filter((key) => depotsData[key].is_active === true)
       .map((key) => ({ id: key, ...depotsData[key] }));
-
-    console.log(` Trouvé ${allDepots.length} dépôts actifs`);
 
     // Charger les produits de TOUS les depôts EN PARALLELE
     const depotsWithProductsPromises = allDepots.map(async (depot) => {
@@ -919,7 +997,7 @@ export const getAllDepotsWithAllProducts = async (
           products: products,
         };
       } catch (err: unknown) {
-        console.error(
+        safeError(
           ` Erreur récupération produits pour depot ${depot.id}:`,
           err instanceof Error ? err.message : String(err),
         );
@@ -931,12 +1009,10 @@ export const getAllDepotsWithAllProducts = async (
     const depotsWithProducts = results.filter((result) => result !== null);
     depotsWithProducts.sort((a, b) => a.distance - b.distance);
 
-    console.log(` Chargé ${depotsWithProducts.length} depots avec produits`);
-
     return { success: true, data: depotsWithProducts };
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Erreur inconnue";
-    console.error(" Erreur récupération complète depots:", errorMsg);
+    safeError(" Erreur récupération complète depots:", errorMsg);
     return { success: false, error: errorMsg };
   }
 };
@@ -950,7 +1026,6 @@ export const listenToCategories = (
   onUpdate: (categories: Category[]) => void,
 ): (() => void) => {
   try {
-    console.log("🎧 Activation listener catégories...");
     const categoriesRef = ref(db, "categories");
 
     const unsubscribe = onValue(categoriesRef, (snapshot) => {
@@ -973,7 +1048,7 @@ export const listenToCategories = (
     return unsubscribe;
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Erreur inconnue";
-    console.error(" Erreur listener catégories:", errorMsg);
+    safeError(" Erreur listener catégories:", errorMsg);
     return () => {};
   }
 };
@@ -991,7 +1066,6 @@ export const listenToDepotsAndProducts = (
   onUpdate: (depots: DepotWithProducts[]) => void,
 ): (() => void) => {
   try {
-    console.log("🎧 Activation listener dépôts + produits...");
     const depotsRef = ref(db, "depots");
 
     let debounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -1002,12 +1076,7 @@ export const listenToDepotsAndProducts = (
 
     const processDepotsData = async (depotsData: any) => {
       const allDepots = Object.keys(depotsData)
-        .filter(
-          (key) =>
-            depotsData[key].is_active === true &&
-            (depotsData[key].subscription_status === "active" ||
-              !depotsData[key].subscription_status),
-        )
+        .filter((key) => isDepotVisible(depotsData[key]))
         .map((key) => ({ id: key, ...depotsData[key] }));
 
       // Charger les produits SEULEMENT pour les dépôts qui ont changé
@@ -1056,7 +1125,7 @@ export const listenToDepotsAndProducts = (
             products: products,
           };
         } catch (err: unknown) {
-          console.error(
+          safeError(
             ` Erreur récupération produits depot ${depot.id}:`,
             err instanceof Error ? err.message : String(err),
           );
@@ -1078,18 +1147,15 @@ export const listenToDepotsAndProducts = (
       if (snapshot.exists()) {
         const depotsData = snapshot.val();
 
-        // DEBOUNCE: Si mise à jour trop proche, attendre avant de traiter
         if (debounceTimer) clearTimeout(debounceTimer);
 
         const timeSinceLastUpdate = Date.now() - lastUpdate;
         if (timeSinceLastUpdate < DEBOUNCE_MS) {
-          // Attendre avant de traiter
           debounceTimer = setTimeout(() => {
             processDepotsData(depotsData);
             debounceTimer = null;
           }, DEBOUNCE_MS - timeSinceLastUpdate);
         } else {
-          // Traiter immédiatement
           await processDepotsData(depotsData);
         }
       } else {
@@ -1098,14 +1164,13 @@ export const listenToDepotsAndProducts = (
       }
     });
 
-    // Cleanup du debounce timer au unmount
     return () => {
       if (debounceTimer) clearTimeout(debounceTimer);
       unsubscribe();
     };
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Erreur inconnue";
-    console.error(" Erreur listener dépôts:", errorMsg);
+    safeError(" Erreur listener dépôts:", errorMsg);
     return () => {};
   }
 };
@@ -1125,12 +1190,9 @@ export const saveToCache = (categories: Category[], depots: Depot[]): void => {
       lastSync: new Date().toISOString(),
     };
     localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
-    console.log(
-      `  Cache sauvegardé: ${categories?.length || 0} catégories, ${depots?.length || 0} dépôts`,
-    );
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Erreur inconnue";
-    console.error(" Erreur sauvegarde cache:", errorMsg);
+    safeError(" Erreur sauvegarde cache:", errorMsg);
   }
 };
 
@@ -1142,33 +1204,24 @@ export const loadFromCache = (): Record<string, any> | null => {
   try {
     const cached = localStorage.getItem(CACHE_KEY);
     if (!cached) {
-      console.log(" Aucun cache trouvé");
       return null;
     }
 
     const cacheData = JSON.parse(cached);
-    console.log(
-      ` Cache chargé: ${cacheData.categories?.length || 0} catégories, ${cacheData.depots?.length || 0} dépôts`,
-    );
-    console.log(`   Dernière sync: ${cacheData.lastSync}`);
     return cacheData;
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Erreur inconnue";
-    console.error(" Erreur lecture cache:", errorMsg);
+    safeError(" Erreur lecture cache:", errorMsg);
     return null;
   }
 };
 
-/**
- * Vider complètement le cache (pour logout par exemple)
- */
 export const clearCache = (): void => {
   try {
     localStorage.removeItem(CACHE_KEY);
-    console.log(" Cache supprimé");
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Erreur inconnue";
-    console.error(" Erreur suppression cache:", errorMsg);
+    safeError(" Erreur suppression cache:", errorMsg);
   }
 };
 
@@ -1187,10 +1240,6 @@ export const getDepotsWithProductsPaginated = async (
   pageNumber: number = 0,
 ): Promise<PaginationResponse<DepotWithProducts>> => {
   try {
-    console.log(
-      ` Chargement dépôts pagés - Page ${pageNumber + 1} (${pageSize}/page)...`,
-    );
-
     const depotsRef = ref(db, "depots");
     const depotsSnapshot = await get(depotsRef);
 
@@ -1203,29 +1252,17 @@ export const getDepotsWithProductsPaginated = async (
 
     const depotsData = depotsSnapshot.val();
     const allDepots = Object.keys(depotsData)
-      .filter(
-        (key) =>
-          depotsData[key].is_active === true &&
-          (depotsData[key].subscription_status === "active" ||
-            !depotsData[key].subscription_status), // ← Accepter aussi les dépôts sans ce champ (backward compatibility)
-      )
+      .filter((key) => isDepotVisible(depotsData[key]))
       .map((key) => ({ id: key, ...depotsData[key] }));
 
     const totalCount = allDepots.length;
-    console.log(` Total: ${totalCount} dépôts actifs`);
 
     // Calculer l'index de départ et fin
     const startIndex = pageNumber * pageSize;
     const endIndex = Math.min(startIndex + pageSize, totalCount);
-    const hasMore = endIndex < totalCount;
 
-    // Extraire la page actuelle
     const pageDepots = allDepots.slice(startIndex, endIndex);
-    console.log(
-      ` Page: ${pageDepots.length} dépôts (${startIndex + 1} à ${endIndex}/${totalCount})`,
-    );
 
-    // Charger les produits EN PARALLELE pour cette page
     const depotsWithProductsPromises = pageDepots.map(async (depot) => {
       try {
         let products = [];
@@ -1257,8 +1294,8 @@ export const getDepotsWithProductsPaginated = async (
           products: products,
         };
       } catch (err: unknown) {
-        console.error(
-          `-{depot.id}:`,
+        safeError(
+          `-${depot.id}:`,
           err instanceof Error ? err.message : String(err),
         );
         return null;
@@ -1270,35 +1307,25 @@ export const getDepotsWithProductsPaginated = async (
       .filter((result) => result !== null)
       .sort((a, b) => a.distance - b.distance);
 
-    console.log(
-      `  ${depotsWithProducts.length} dépôts chargés (has more: ${hasMore})`,
-    );
-
     return {
       success: true,
       data: depotsWithProducts,
     };
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Erreur inconnue";
-    console.error(" Erreur pagination dépôts:", errorMsg);
+    safeError(" Erreur pagination dépôts:", errorMsg);
     return { success: false, error: errorMsg };
   }
 };
 
-/**
- * Initialiser les catégories racine si elles n'existent pas
- */
 export const ensureCategoriesExist = async (): Promise<void> => {
   try {
     const categoriesRef = ref(db, "categories");
     const categoriesSnapshot = await get(categoriesRef);
 
     if (categoriesSnapshot.exists()) {
-      console.log("✅ Catégories existent déjà");
       return;
     }
-
-    console.log("📝 Création des catégories racine...");
 
     const defaultCategories = [
       {
@@ -1337,12 +1364,9 @@ export const ensureCategoriesExist = async (): Promise<void> => {
         is_active: true,
         created_at: new Date().toISOString(),
       });
-      console.log(`  ✓ Créée: ${category.name}`);
     }
-
-    console.log("✅ Catégories initialisées");
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Erreur inconnue";
-    console.error("❌ Erreur initialisation catégories:", errorMsg);
+    safeError("❌ Erreur initialisation catégories:", errorMsg);
   }
 };

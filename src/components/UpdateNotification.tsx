@@ -4,17 +4,14 @@ export default function UpdateNotification(): ReactNode {
   const [updateAvailable, setUpdateAvailable] = useState<boolean>(false);
 
   useEffect(() => {
-   
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.addEventListener("controllerchange", () => {
-        
         setUpdateAvailable(false);
       });
     }
 
     const checkForUpdates = async () => {
       if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
-        
         navigator.serviceWorker.controller.postMessage({
           type: "SKIP_WAITING",
         });
@@ -31,9 +28,7 @@ export default function UpdateNotification(): ReactNode {
             setUpdateAvailable(true);
           }
           sessionStorage.setItem("app_version", newVersion);
-        } catch (error) {
-          console.error("Error checking for updates:", error);
-        }
+        } catch {}
       }
     };
 
@@ -44,7 +39,7 @@ export default function UpdateNotification(): ReactNode {
     return () => clearInterval(interval);
   }, []);
 
-  const handleUpdate = () => {  
+  const handleUpdate = () => {
     window.location.reload();
   };
 

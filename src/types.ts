@@ -59,6 +59,9 @@ export interface Depot {
   is_top_voted?: boolean; // Top 1 du trimestre
   vote_rank?: number; // Position dans le classement (1, 2, 3...)
   current_votes?: number; // Votes actuels ce trimestre
+  // Promo content for premium tiers
+  promo_image_url?: string; // URL for promotional image (advanced/elite tiers)
+  promo_video_url?: string; // URL for promotional video (elite tier only)
   created_at: string; // ISO date
   updated_at: string; // ISO date
 }

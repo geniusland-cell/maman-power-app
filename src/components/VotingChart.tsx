@@ -10,6 +10,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  LabelList,
 } from "recharts";
 import "./VotingChart.css";
 
@@ -35,7 +36,6 @@ const VotingChart = ({ isOpen, onClose }: VotingChartProps) => {
   const [quarter, setQuarter] = useState("");
   const [chartData, setChartData] = useState<ChartData[]>([]);
 
-  // Charger les données en temps réel
   useEffect(() => {
     if (!isOpen) return;
 
@@ -46,71 +46,22 @@ const VotingChart = ({ isOpen, onClose }: VotingChartProps) => {
         setRankings(data);
         setQuarter(getCurrentQuarter());
 
-        // Récupérer les données détaillées pour le graphique
-        const currentQuarter = getCurrentQuarter();
-        const votesRef = ref(db, `votes/${currentQuarter}`);
+        const topDepots = data
+          .slice(0, 5)
+          .map((depot) => ({
+            name: depot.depot_name || `Dépôt ${depot.depotId}`,
+            votes: depot.vote_count,
+          }))
+          .sort((a, b) => b.votes - a.votes);
 
-        // Listener pour updates en temps réel
-        const unsubscribe = onValue(
-          votesRef,
-          async (snapshot) => {
-            if (snapshot.exists()) {
-              const votesData = snapshot.val();
-              // Récupérer les noms des dépôts depuis Firebase
-              const depotIds = Object.keys(votesData).filter(
-                (key) => key !== "metadata",
-              );
-              const depotNames: Record<string, string> = {};
-
-              for (const depotId of depotIds) {
-                try {
-                  const depotRef = ref(db, `depots/${depotId}`);
-                  const depotSnapshot = await get(depotRef);
-                  if (depotSnapshot.exists()) {
-                    const depotData = depotSnapshot.val();
-                    depotNames[depotId] = depotData.depot_name || depotId;
-                  } else {
-                    depotNames[depotId] = depotId;
-                  }
-                } catch (error) {
-                  console.error(
-                    `Erreur récupération nom dépôt ${depotId}:`,
-                    error,
-                  );
-                  depotNames[depotId] = depotId;
-                }
-              }
-
-              // Transformer en données pour le graphique (top 5 dépôts)
-              const topDepots = Object.entries(votesData)
-                .filter(([key]) => key !== "metadata")
-                .map(([depotId, data]: [string, any]) => ({
-                  name: depotNames[depotId] || depotId,
-                  votes: data.vote_count || 0,
-                }))
-                .sort((a, b) => b.votes - a.votes)
-                .slice(0, 5);
-
-              setChartData(topDepots);
-            }
-          },
-          (error) => {
-            console.error(" Erreur chargement données graphique:", error);
-          },
-        );
-
+        setChartData(topDepots);
         setLoading(false);
-        return unsubscribe;
-      } catch (err) {
-        console.error(" Erreur chargement données:", err);
+      } catch {
         setLoading(false);
       }
     };
 
-    const unsubscribePromise = loadData();
-    return () => {
-      unsubscribePromise?.then((unsub) => unsub?.());
-    };
+    loadData();
   }, [isOpen]);
 
   if (!isOpen) return null;
@@ -119,21 +70,16 @@ const VotingChart = ({ isOpen, onClose }: VotingChartProps) => {
     ...[...chartData.map((d) => d.votes), ...rankings.map((d) => d.vote_count)],
     1,
   );
-
-  // Fixer l'échelle max à 15 pour progression visible
   const yAxisMax = Math.max(maxVotes, 15);
 
-  // Préparer les données avec couleurs pour le top 3
-  const chartDataWithColors = chartData.map((item, index) => ({
+  const nbDepots = chartData.length;
+  const barCategoryGap = nbDepots > 15 ? "8%" : nbDepots > 10 ? "12%" : "18%";
+  const barGap = nbDepots > 15 ? 1 : nbDepots > 10 ? 2 : 4;
+  const tickFontSize = nbDepots > 15 ? 9 : nbDepots > 10 ? 10 : 12;
+
+  const chartDataWithColors = chartData.map((item) => ({
     ...item,
-    fill:
-      index === 0
-        ? "#FFD700"
-        : index === 1
-          ? "#C0C0C0"
-          : index === 2
-            ? "#CD7F32"
-            : "#4CAF50",
+    fill: "#3b82f6",
   }));
 
   return (
@@ -167,45 +113,85 @@ const VotingChart = ({ isOpen, onClose }: VotingChartProps) => {
               {/* Graphique en barres verticales */}
               <div className="graph-container">
                 <h2>Tendance des Votes (Top 5)</h2>
-                <ResponsiveContainer width="100%" height={280}>
+                <ResponsiveContainer width="100%" height={350}>
                   <BarChart
                     data={chartDataWithColors}
-                    barSize={16}
-                    margin={{ top: 10, right: 20, left: 30, bottom: 30 }}
+                    margin={{
+                      top: 30,
+                      right: 20,
+                      left: 10,
+                      bottom: 30,
+                    }}
+                    barCategoryGap={barCategoryGap}
+                    barGap={barGap}
                   >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="#e5e7eb"
+                      vertical={false}
+                    />
                     <XAxis
                       dataKey="name"
-                      tick={{ fontSize: 11, fill: "#666" }}
-                      axisLine={{ stroke: "#ccc" }}
-                      tickLine={{ stroke: "#ccc" }}
-                      angle={-45}
-                      textAnchor="end"
-                      height={60}
+                      tick={{
+                        fontSize: tickFontSize,
+                        fill: "#4b5563",
+                        fontWeight: "500",
+                      }}
+                      height={40}
+                      interval={0}
+                      tickLine={false}
+                      axisLine={{ stroke: "#d1d5db", strokeWidth: 1 }}
                     />
                     <YAxis
                       domain={[0, yAxisMax]}
-                      tick={{ fontSize: 11, fill: "#666" }}
-                      axisLine={{ stroke: "#ccc" }}
-                      tickLine={{ stroke: "#ccc" }}
-                      tickCount={6}
-                      width={30}
+                      tickCount={8}
+                      tick={{
+                        fontSize: 11,
+                        fill: "#4b5563",
+                      }}
+                      tickLine={false}
+                      axisLine={{ stroke: "#d1d5db", strokeWidth: 1 }}
+                      label={{
+                        value: "Nombre de votes",
+                        angle: -90,
+                        position: "insideLeft",
+                        style: {
+                          fontSize: 12,
+                          fill: "#6b7280",
+                          fontWeight: "500",
+                        },
+                        offset: -5,
+                      }}
                     />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "#fff",
-                        border: "1px solid #ddd",
-                        borderRadius: "4px",
-                        fontSize: "11px",
+                        backgroundColor: "white",
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "8px",
+                        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                        padding: "10px 14px",
+                        fontSize: "12px",
                       }}
+                      labelFormatter={(label) => ` ${label}`}
                     />
                     <Bar
                       dataKey="votes"
-                      fill="#4CAF50"
-                      fillOpacity={0.8}
+                      fill="#3b82f6"
+                      fillOpacity={0.85}
+                      radius={[4, 4, 0, 0]}
                       animationDuration={1000}
                       animationEasing="ease-in-out"
-                    />
+                    >
+                      <LabelList
+                        dataKey="votes"
+                        position="top"
+                        style={{
+                          fontSize: "11px",
+                          fontWeight: "600",
+                          fill: "#1f2937",
+                        }}
+                      />
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </div>

@@ -36,7 +36,7 @@ const VotingGuidelinesModal = ({
       <div className="voting-guidelines-modal">
         {/* Header */}
         <div className="modal-header">
-          <h1>🗳️ Système de Vote - Règles & Critères</h1>
+          <h1> Système de Vote - Règles & Critères</h1>
           <p className="modal-subtitle">
             Vision Unique - Élisez le Meilleur Dépôt
           </p>
@@ -46,7 +46,7 @@ const VotingGuidelinesModal = ({
         <div className="modal-content">
           {/* Section 1 : Comment voter */}
           <section className="guideline-section">
-            <h2>📖 Comment Voter ?</h2>
+            <h2> Comment Voter ?</h2>
             <p>
               Pendant <strong>{daysLeft} jours</strong>, vous avez l'opportunité
               d'élire le dépôt qui vous offre le meilleur service, les meilleurs
@@ -56,7 +56,7 @@ const VotingGuidelinesModal = ({
               <li>Parcourez les dépôts disponibles</li>
               <li>Trouvez celui qui mérite votre vote</li>
               <li>
-                Cliquez sur le bouton <strong>🗳️ Vote</strong> sur sa carte
+                Cliquez sur le bouton <strong> Vote</strong> sur sa carte
               </li>
               <li>Confirmez votre choix</li>
             </ol>
@@ -64,7 +64,7 @@ const VotingGuidelinesModal = ({
 
           {/* Section 2 : Critères de vote */}
           <section className="guideline-section">
-            <h2>⭐ Critères de Vote</h2>
+            <h2> Critères de Vote</h2>
             <p>Votez pour le dépôt qui excelle dans :</p>
             <ul className="criteria-list">
               <li>
@@ -88,26 +88,26 @@ const VotingGuidelinesModal = ({
 
           {/* Section 3 : Règles importantes */}
           <section className="guideline-section">
-            <h2>📋 Règles Importantes</h2>
+            <h2> Règles Importantes</h2>
             <ul className="rules-list">
               <li>
-                🔒 <strong>1 Vote par Personne</strong> - Un vote unique et
+                 <strong>1 Vote par Personne</strong> - Un vote unique et
                 définitif
               </li>
               <li>
-                🚫 <strong>Pas de modification</strong> - Vous ne pouvez pas
+                   <strong>Pas de modification</strong> - Vous ne pouvez pas
                 changer votre vote
               </li>
               <li>
-                ⏰ <strong>Période limitée</strong> - Les votes ferment
+                   <strong>Période limitée</strong> - Les votes ferment
                 automatiquement
               </li>
               <li>
-                🏆 <strong>Résultats publics</strong> - Le classement sera
+                   <strong>Résultats publics</strong> - Le classement sera
                 affiché à tous
               </li>
               <li>
-                👑 <strong>Récompense au gagnant</strong> - Le top 1 reçoit un
+                   <strong>Récompense au gagnant</strong> - Le top 1 reçoit un
                 badge prestigieux
               </li>
             </ul>
@@ -115,7 +115,7 @@ const VotingGuidelinesModal = ({
 
           {/* Section 4 : Confidentialité */}
           <section className="guideline-section">
-            <h2>🔐 Confidentialité & Transparence</h2>
+            <h2> Confidentialité & Transparence</h2>
             <p>
               Vos votes sont sécurisés et comptabilisés de manière transparente
               par
@@ -126,7 +126,7 @@ const VotingGuidelinesModal = ({
 
           {/* Section 5 : Contact */}
           <section className="guideline-section">
-            <h2>❓ Questions ?</h2>
+            <h2> Questions ?</h2>
             <p>
               Pour toute question, contactez Vision Unique via WhatsApp
               <strong> +242 067 678 128</strong> ou email{" "}
@@ -154,7 +154,7 @@ const VotingGuidelinesModal = ({
             disabled={!acceptedTerms}
             className={`accept-button ${acceptedTerms ? "enabled" : "disabled"}`}
           >
-            ✅ Accepter & Commencer à Voter
+             Accepter & Commencer à Voter
           </button>
         </div>
 

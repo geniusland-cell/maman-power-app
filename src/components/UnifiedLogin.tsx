@@ -26,18 +26,15 @@ export default function UnifiedLogin({
     setIsLoading(true);
 
     try {
-      console.log(" Tentative connexion par téléphone...");
       const loginResult = await loginByPhone(phone, password);
 
       if (loginResult.success) {
-        console.log(" Connexion réussie!");
         onLoginSuccess?.(loginResult.data!);
         return;
       }
 
       setError(loginResult.error || "Connexion échouée");
     } catch (err: unknown) {
-      console.error(" Erreur:", err);
       const errorMsg =
         err instanceof Error ? err.message : "Une erreur est survenue";
       setError(errorMsg);
@@ -72,12 +69,9 @@ export default function UnifiedLogin({
         return;
       }
 
-      console.log(" Inscription en cours...");
       const registerResult = await registerUser(name, phone, password);
 
       if (registerResult.success) {
-        console.log(" Inscription réussie! Connexion automatique...");
-
         const loginResult = await loginByPhone(phone, password);
         if (loginResult.success && loginResult.data) {
           onLoginSuccess?.(loginResult.data);
@@ -87,7 +81,6 @@ export default function UnifiedLogin({
 
       setError(registerResult.error || "Erreur d'inscription");
     } catch (err: unknown) {
-      console.error(" Erreur inscription:", err);
       const errorMsg =
         err instanceof Error ? err.message : "Une erreur est survenue";
       setError(errorMsg);
@@ -176,7 +169,7 @@ export default function UnifiedLogin({
           </form>
 
           <div className="login-footer">
-            <p> Vous avez déjà un compte? Connectez-vous ci-dessus</p>
+            <p> Vous avez déjà un compte ? Connectez-vous ci-dessus</p>
           </div>
         </div>
       </div>

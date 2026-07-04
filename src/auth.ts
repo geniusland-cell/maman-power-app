@@ -44,7 +44,6 @@ export const useAuth = (): {
           setUser(result.data);
           //  SAUVEGARDER dans localStorage pour prochain chargement instantané
           localStorage.setItem("user", JSON.stringify(result.data));
-          console.log(" Session restaurée pour:", result.data.name);
         } else {
           setUser(null);
           localStorage.removeItem("user");
@@ -78,7 +77,6 @@ export const useAuth = (): {
       if (result.success && result.data) {
         setUser(result.data);
         localStorage.setItem("user", JSON.stringify(result.data));
-        console.log(" Connexion réussie:", result.data.name);
         return { success: true, data: result.data };
       } else {
         const errorMsg = result.error || "Erreur de connexion";
@@ -118,7 +116,6 @@ export const useAuth = (): {
       if (result.success && result.data) {
         setUser(result.data);
         localStorage.setItem("user", JSON.stringify(result.data));
-        console.log(" Inscription réussie:", result.data.name);
         return { success: true, data: result.data };
       } else {
         const errorMsg = result.error || "Erreur d'inscription";
@@ -149,7 +146,6 @@ export const useAuth = (): {
       if (result.success) {
         setUser(null);
         localStorage.removeItem("user"); //  Nettoyer le cache
-        console.log(" Déconnexion réussie");
         return { success: true };
       } else {
         const errorMsg = result.error || "Erreur de déconnexion";

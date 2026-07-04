@@ -8,9 +8,11 @@ import {
   getDepotsWithProductsPaginated,
   ensureCategoriesExist,
   loadQuartiersCache,
+  backfillDepotCoordinates,
   getCurrentQuarter,
   isVotingActive,
   voteForDepot,
+  listenToVotingStatus,
 } from "./firebase";
 import { useAuth } from "./auth";
 import UnifiedLogin from "./components/UnifiedLogin";
@@ -74,6 +76,9 @@ function App(): ReactNode {
     daysLeft: 0,
     currentQuarter: getCurrentQuarter(),
   });
+  const [votingPhaseStatus, setVotingPhaseStatus] = useState<
+    "PENDING" | "VOTING_ACTIVE" | "VOTING_CLOSED"
+  >("PENDING");
   const [hasAcceptedVoting, setHasAcceptedVoting] = useState<boolean>(() => {
     const quarter = getCurrentQuarter();
     const accepted = localStorage.getItem(
@@ -82,6 +87,10 @@ function App(): ReactNode {
     return accepted === "true";
   });
   const [showVotingStats, setShowVotingStats] = useState<boolean>(false);
+  const [notification, setNotification] = useState<string | null>(null);
+
+  const isVotingUiActive =
+    votingStatus.active && votingPhaseStatus === "VOTING_ACTIVE";
 
   //  pagintion des depots
   const pageSize = 20;
@@ -107,7 +116,12 @@ function App(): ReactNode {
 
   // Charger le cache des quartiers dès le démarrage
   useEffect(() => {
-    loadQuartiersCache();
+    const initializeAppData = async () => {
+      await loadQuartiersCache();
+      await backfillDepotCoordinates();
+    };
+
+    initializeAppData();
   }, []);
 
   // 🗳️ Vérifier le statut du vote au démarrage
@@ -115,7 +129,6 @@ function App(): ReactNode {
     const checkVotingStatus = async () => {
       const status = await isVotingActive();
       setVotingStatus(status);
-      console.log(" Statut vote chargé:", status);
 
       // Si la période de vote est active et l'utilisateur n'a pas accepté les règles, afficher le modal
       if (status.active && !hasAcceptedVoting && user) {
@@ -126,22 +139,51 @@ function App(): ReactNode {
     checkVotingStatus();
   }, [user]);
 
-  // 📍 Récupérer la position GPS de l'utilisateur au démarrage
+  // �️ Écouter le statut des votes en temps réel depuis Firebase
+  useEffect(() => {
+    const unsubscribe = listenToVotingStatus((status) => {
+      setVotingPhaseStatus(status);
+
+      // Afficher une notification selon le statut
+      if (status === "VOTING_CLOSED") {
+        setShowVotingGuidelines(false);
+        setNotification("🚫 Les votes sont terminés pour ce trimestre");
+      } else if (status === "VOTING_ACTIVE") {
+        setNotification(" Les votes sont ouverts!");
+        // Relancer la politique de confidentialité
+        const quarter = getCurrentQuarter();
+        localStorage.removeItem(`voting_guidelines_accepted_${quarter}`);
+        setHasAcceptedVoting(false);
+        if (user) {
+          setShowVotingGuidelines(true);
+        }
+      } else {
+        setShowVotingGuidelines(false);
+      }
+
+      // Masquer la notification après 5 secondes
+      setTimeout(() => {
+        setNotification(null);
+      }, 5000);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [user]);
+
+  // � Récupérer la position GPS de l'utilisateur au démarrage
   useEffect(() => {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          console.log(
-            `📍 Position trouvée: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
-          );
           setUserLat(latitude);
           setUserLon(longitude);
           localStorage.setItem("user_latitude", latitude.toString());
           localStorage.setItem("user_longitude", longitude.toString());
         },
-        (error) => {
-          console.warn(`⚠️ Impossible accéder GPS: ${error.message}`);
+        () => {
           // On garde le fallback à Brazzaville
         },
       );
@@ -170,33 +212,26 @@ function App(): ReactNode {
 
         if (pageNum === 0) {
           setDisplayedDepots(newDepots);
-          console.log(` Page 1 chargée: ${newDepots.length} dépôts`);
         } else {
           setDisplayedDepots((prev) => [...prev, ...newDepots]);
-          console.log(
-            ` Page ${pageNum + 1} chargée: ${newDepots.length} dépôts supplémentaires`,
-          );
         }
 
         setTotalDepots(newDepots.length);
         setHasMore(false);
         setCurrentPage(pageNum);
       }
-    } catch (error) {
-      console.error(" Erreur chargement pagination:", error);
+    } catch {
     } finally {
       setIsLoadingMore(false);
     }
   };
 
-  //  Pagination : Charger la page suivante quand on possede plus de 40 depots (bouton "Charger plus")
   const loadNextPage = () => {
     if (hasMore && !isLoadingMore) {
       loadMoreDepots(currentPage + 1);
     }
   };
 
-  // Gérer les favoris (ajouter/retirer un dépôt des favoris)
   const toggleFavorite = (depotId: string) => {
     const newFavorites = favorites.includes(depotId)
       ? favorites.filter((id) => id !== depotId)
@@ -206,54 +241,38 @@ function App(): ReactNode {
     localStorage.setItem("depot_favorites", JSON.stringify(newFavorites));
   };
 
-  // NOUVEAU: Charger les dépôts du cache au démarrage (même offline)
   useEffect(() => {
-    console.log(" Chargement initial des dépôts depuis cache...");
     const cacheData = loadFromCache();
     if (cacheData?.depots && cacheData.depots.length > 0) {
       setDisplayedDepots(cacheData.depots);
       setTotalDepots(cacheData.depots.length);
       setIsCached(true);
-      setIsOnline(false); // On ne sait pas si on est online, on affiche le cache
-      console.log(` Dépôts du cache chargés: ${cacheData.depots.length}`);
+      setIsOnline(false);
     }
-  }, []); // Une seule fois au démarrage
-
-  // Initialiser les catégories racine si elles n'existent pas
+  }, []);
   useEffect(() => {
     if (user) {
-      console.log("🚀 User connecté - Vérification des catégories...");
       ensureCategoriesExist();
     }
-  }, [user?.id]); // Une seule fois quand l'utilisateur change
+  }, [user?.id]);
 
   useEffect(() => {
     if (user) {
-      console.log(" Initialisation des Realtime Listeners...");
-      if (isCached) {
-        console.log(" Cache chargé. En attente des données Realtime...");
-      }
-
-      //  LISTENER 1: Catégories en temps réel
       const unsubscribeCategories = listenToCategories((categories) => {
-        console.log(` Catégories reçues (realtime): ${categories.length}`);
         setCategoriesData(categories);
-        setIsOnline(true); // Firebase fonctionne!
-        setIsCached(false); // Données en direct, pas du cache
+        setIsOnline(true);
+        setIsCached(false);
       });
 
-      //  LISTENER 2: Dépôts + produits en temps réel
       const unsubscribeDepots = listenToDepotsAndProducts(
         userLat,
         userLon,
         (depotsWithProducts) => {
-          console.log(` Dépôts reçus (realtime): ${depotsWithProducts.length}`);
           setLastRefreshTime(new Date());
           setIsOnline(true);
           setIsCached(false);
-          setDisplayedDepots(depotsWithProducts); // Mettre à jour les dépôts en temps réel
+          setDisplayedDepots(depotsWithProducts);
 
-          // SAUVEGARDER dans le cache automatiquement avec les catégories du state
           setCategoriesData((prevCategories) => {
             saveToCache(prevCategories, depotsWithProducts);
             return prevCategories;
@@ -261,18 +280,15 @@ function App(): ReactNode {
         },
       );
 
-      //  Nettoyage des listeners au unmount
       return () => {
-        console.log(" Arrêt des Realtime Listeners...");
         unsubscribeCategories();
         unsubscribeDepots();
       };
     }
-  }, [user?.id, userLat, userLon]); // Relancer si la position change!
+  }, [user?.id, userLat, userLon]);
 
   useEffect(() => {
     if (user) {
-      console.log(" Chargement 1ère page dépôts (pagination)...");
       loadMoreDepots(0);
     }
   }, [user, userLat, userLon]);
@@ -280,7 +296,6 @@ function App(): ReactNode {
   const filteredDepots = useMemo(() => {
     if (!selectedCategory || displayedDepots.length === 0) return [];
 
-    // Créer une Map de catégories pour recherche O(1)
     const categoryMappings: Record<string, string[]> = {
       "Poisson & Viande": ["Poisson", "Viande", "Poisson & Viande"],
       "Fruit et Legume": ["Fruits", "Fruit et Legume"],
@@ -323,17 +338,14 @@ function App(): ReactNode {
   }, [selectedCategory]);
 
   const showCategory = (categoryName: string) => {
-    console.log(" Categorie sélectionnée:", categoryName);
     setSelectedCategory(categoryName);
   };
 
-  //  Gérer l'acceptation des règles de vote
   const handleVotingGuidelinesAccept = () => {
     setHasAcceptedVoting(true);
     setShowVotingGuidelines(false);
   };
 
-  //  Gérer le vote pour un dépôt
   const handleVote = async (depotId: string): Promise<void> => {
     if (!user) {
       throw new Error("Vous devez être connecté pour voter");
@@ -347,12 +359,9 @@ function App(): ReactNode {
     if (!result.success) {
       throw new Error(result.error || "Erreur lors du vote");
     }
-
-    console.log(" Vote enregistré pour dépôt:", depotId);
   };
 
   const handleLogout = () => {
-    console.log(" Déconnexion avec nettoyage du cache...");
     clearCache();
     logout();
   };
@@ -395,7 +404,6 @@ function App(): ReactNode {
     ).values(),
   );
 
-  // Verifier si l'utilisateur est un vendeur, sinon rediriger
   if (user && user.role !== "vendor") {
     return (
       <div className="app">
@@ -462,7 +470,6 @@ function App(): ReactNode {
     );
   }
 
-  // AFFICHER LOGIN SEULEMENT si pas d'utilisateur ET pas de cache
   if (!user && !isCached) {
     return (
       <div className="app">
@@ -498,7 +505,7 @@ function App(): ReactNode {
                     .join("")
                     .toUpperCase()}
                 </div>
-                {votingStatus.active && (
+                {isVotingUiActive && (
                   <button
                     className="voting-btn"
                     onClick={() => setShowVotingStats(true)}
@@ -527,7 +534,7 @@ function App(): ReactNode {
         <div className="realtime-indicator">
           {isCached ? (
             <>
-              <span className="indicator-dot cached">💾</span>
+              <span className="indicator-dot cached"> </span>
               <span className="indicator-text cached">
                 Données du cache - Synchronisation en cours...
               </span>
@@ -547,10 +554,15 @@ function App(): ReactNode {
         </div>
         {lastRefreshTime && (
           <span className="last-refresh">
-            ⏱️ Dernière sync: {lastRefreshTime.toLocaleTimeString("fr-FR")}
+            ⏱ Dernière sync: {lastRefreshTime.toLocaleTimeString("fr-FR")}
           </span>
         )}
       </div>
+
+      {/* Notification de statut des votes */}
+      {notification && (
+        <div className="voting-status-notification">{notification}</div>
+      )}
 
       <div className="categories-section">
         <div className="categories-title">CATÉGORIES DISPONIBLES</div>
@@ -593,8 +605,7 @@ function App(): ReactNode {
             favorites={favorites}
             onToggleFavorite={toggleFavorite}
             onVote={handleVote}
-            userId={user?.id}
-            votingEnabled={votingStatus.active && hasAcceptedVoting}
+            votingEnabled={isVotingUiActive && hasAcceptedVoting}
           />
         )}
 

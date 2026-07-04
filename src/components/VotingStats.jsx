@@ -24,9 +24,7 @@ const VotingStats = ({ isOpen, onClose }) => {
         const data = await getVotingRankings();
         setRankings(data);
         setQuarter(getCurrentQuarter());
-        console.log(" Classements de vote chargés:", data);
-      } catch (err) {
-        console.error(" Erreur chargement classements:", err);
+      } catch {
       } finally {
         setLoading(false);
       }
@@ -74,7 +72,7 @@ const VotingStats = ({ isOpen, onClose }) => {
             </div>
           ) : rankings.length === 0 ? (
             <div className="empty-state">
-              <div className="empty-icon">📊</div>
+              <div className="empty-icon"></div>
               <p>Aucun vote enregistré pour le moment</p>
               <p className="empty-subtitle">
                 Soyez parmi les premiers à voter!

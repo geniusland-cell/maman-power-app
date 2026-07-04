@@ -1,6 +1,6 @@
 import { useState, ReactNode } from "react";
 import type { DepotWithProducts } from "../types";
-import { optimizeThumbnail, optimizeModalImage } from "../utils/cloudinary";
+import { optimizeModalImage } from "../utils/cloudinary";
 import "./DepotsList.css";
 
 interface DepotsListProps {
@@ -8,8 +8,7 @@ interface DepotsListProps {
   favorites: string[];
   onToggleFavorite: (depotId: string) => void;
   onVote?: (depotId: string) => Promise<void>; // Callback pour voter
-  userId?: string; 
-  votingEnabled?: boolean; 
+  votingEnabled?: boolean;
 }
 
 export default function DepotsList({
@@ -17,26 +16,22 @@ export default function DepotsList({
   favorites,
   onToggleFavorite,
   onVote,
-  userId,
   votingEnabled = false,
 }: DepotsListProps): ReactNode {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [votingDepotId, setVotingDepotId] = useState<string | null>(null);
-  const [votingError, setVotingError] = useState<string | null>(null);
 
   const handleCall = (phoneNumber: string): void => {
     navigator.clipboard
       .writeText(phoneNumber)
       .then(() => {
         alert(` Numéro copié: ${phoneNumber}\n\nAppel lancé...`);
-        
+
         setTimeout(() => {
           window.location.href = `tel:${phoneNumber}`;
         }, 100);
       })
-      .catch((err: Error) => {
-        console.error("Erreur copie:", err);
-      });
+      .catch(() => {});
   };
 
   const openImageModal = (imageUrl: string): void => {
@@ -49,20 +44,18 @@ export default function DepotsList({
 
   const handleVote = async (depotId: string): Promise<void> => {
     if (!votingEnabled || !onVote) {
-      setVotingError("Désolé, le vote n'est pas disponible actuellement");
+      alert("Désolé, le vote n'est pas disponible actuellement");
       return;
     }
 
     try {
       setVotingDepotId(depotId);
-      setVotingError(null);
       await onVote(depotId);
       setVotingDepotId(null);
       alert(" Merci pour votre vote!");
     } catch (err) {
       const errorMsg =
         err instanceof Error ? err.message : "Erreur lors du vote";
-      setVotingError(errorMsg);
       setVotingDepotId(null);
       alert(` Erreur: ${errorMsg}`);
     }
@@ -151,9 +144,7 @@ export default function DepotsList({
                       <div className="product-image-container">
                         {product.image || product.image_url ? (
                           <img
-                            src={optimizeThumbnail(
-                              product.image || product.image_url!,
-                            )}
+                            src={product.image || product.image_url!}
                             alt={product.name}
                             className="product-thumb"
                             onClick={() =>
@@ -193,6 +184,33 @@ export default function DepotsList({
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+
+              {/* Promo Content for Premium Tiers */}
+              {(depot.tier === "advanced" || depot.tier === "elite") && (
+                <div className="promo-section">
+                  {depot.promo_image_url && (
+                    <div className="promo-image-container">
+                      <img
+                        src={depot.promo_image_url}
+                        alt="Promo"
+                        className="promo-image"
+                        onClick={() =>
+                          window.open(depot.promo_image_url, "_blank")
+                        }
+                      />
+                    </div>
+                  )}
+                  {depot.tier === "elite" && depot.promo_video_url && (
+                    <div className="promo-video-container">
+                      <iframe
+                        src={depot.promo_video_url}
+                        className="promo-video"
+                        allowFullScreen
+                      />
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -241,7 +259,7 @@ export default function DepotsList({
                     title="Voter pour ce dépôt"
                   >
                     <span className="action-icon">
-                      {votingDepotId === depot.id ? "⏳" : "🗳️"}
+                      {votingDepotId === depot.id ? "⏳" : " "}
                     </span>
                     <span className="action-text">
                       {votingDepotId === depot.id
