@@ -59,6 +59,63 @@ export const db = getDatabase(app);
 let quartiersCache: Map<string, { latitude: number; longitude: number }> =
   new Map();
 
+const CACHE_TTL_MS = 15 * 60 * 1000;
+const cacheInFlight = new Map<string, Promise<unknown>>();
+
+const readLocalCache = <T>(key: string): T | null => {
+  try {
+    const saved = localStorage.getItem(key);
+    if (!saved) return null;
+    const parsed = JSON.parse(saved);
+    if (!parsed?.ts || !parsed?.value) return null;
+    if (Date.now() - parsed.ts > CACHE_TTL_MS) return null;
+    return parsed.value as T;
+  } catch {
+    return null;
+  }
+};
+
+const writeLocalCache = (key: string, value: unknown): void => {
+  try {
+    localStorage.setItem(key, JSON.stringify({ ts: Date.now(), value }));
+  } catch {
+    // ignore cache write failures
+  }
+};
+
+const readOrFetchWithCache = async <T>(
+  key: string,
+  fetcher: () => Promise<T>,
+): Promise<T> => {
+  const cached = readLocalCache<T>(key);
+  if (cached !== null) {
+    return cached;
+  }
+
+  if (cacheInFlight.has(key)) {
+    return cacheInFlight.get(key) as Promise<T>;
+  }
+
+  const request = fetcher()
+    .then((value) => {
+      writeLocalCache(key, value);
+      return value;
+    })
+    .catch((error) => {
+      const fallback = readLocalCache<T>(key);
+      if (fallback !== null) {
+        return fallback;
+      }
+      throw error;
+    })
+    .finally(() => {
+      cacheInFlight.delete(key);
+    });
+
+  cacheInFlight.set(key, request);
+  return request;
+};
+
 // Récupérer les quartiers depuis Firebase avec leurs coordonnées
 export const loadQuartiersCache = async (): Promise<void> => {
   try {
@@ -803,19 +860,26 @@ export const getDepotsByTierAndCategory = async (
 
 export const getDepots = async (): Promise<FirebaseResponse<Depot[]>> => {
   try {
-    const depotsRef = ref(db, "depots");
-    const snapshot = await get(depotsRef);
+    const cached = await readOrFetchWithCache<FirebaseResponse<Depot[]>>(
+      "maman-power-depots",
+      async () => {
+        const depotsRef = ref(db, "depots");
+        const snapshot = await get(depotsRef);
 
-    if (!snapshot.exists()) {
-      return { success: true, data: [] };
-    }
+        if (!snapshot.exists()) {
+          return { success: true, data: [] };
+        }
 
-    const depotsData = snapshot.val();
-    const depots = Object.keys(depotsData)
-      .filter((key) => depotsData[key].is_active === true)
-      .map((key) => ({ id: key, ...depotsData[key] }));
+        const depotsData = snapshot.val();
+        const depots = Object.keys(depotsData)
+          .filter((key) => depotsData[key].is_active === true)
+          .map((key) => ({ id: key, ...depotsData[key] }));
 
-    return { success: true, data: depots };
+        return { success: true, data: depots };
+      },
+    );
+
+    return cached;
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Erreur inconnue";
     safeError(" Erreur récupération dépôts:", errorMsg);
@@ -827,19 +891,26 @@ export const getCategories = async (): Promise<
   FirebaseResponse<Category[]>
 > => {
   try {
-    const categoriesRef = ref(db, "categories");
-    const snapshot = await get(categoriesRef);
+    const cached = await readOrFetchWithCache<FirebaseResponse<Category[]>>(
+      "maman-power-categories",
+      async () => {
+        const categoriesRef = ref(db, "categories");
+        const snapshot = await get(categoriesRef);
 
-    if (!snapshot.exists()) {
-      return { success: true, data: [] };
-    }
+        if (!snapshot.exists()) {
+          return { success: true, data: [] };
+        }
 
-    const categoriesData = snapshot.val();
-    const categories = Object.keys(categoriesData)
-      .filter((key) => categoriesData[key].is_active === true)
-      .map((key) => ({ id: key, ...categoriesData[key] }));
+        const categoriesData = snapshot.val();
+        const categories = Object.keys(categoriesData)
+          .filter((key) => categoriesData[key].is_active === true)
+          .map((key) => ({ id: key, ...categoriesData[key] }));
 
-    return { success: true, data: categories };
+        return { success: true, data: categories };
+      },
+    );
+
+    return cached;
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Erreur inconnue";
     safeError(" Erreur récupération catégories:", errorMsg);

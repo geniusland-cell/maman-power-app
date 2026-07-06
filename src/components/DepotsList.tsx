@@ -86,9 +86,6 @@ export default function DepotsList({
     return emojiMap[normalized] || "📦";
   };
 
-  const displayCategory = (category: string): string =>
-    normalizeCategoryName(category);
-
   if (!depots || depots.length === 0) {
     return (
       <div className="depots-container">
@@ -172,9 +169,6 @@ export default function DepotsList({
                       {/* Product Info */}
                       <div className="product-info-container">
                         <span className="product-name">{product.name}</span>
-                        <span className="product-category">
-                          {displayCategory(product.category)}
-                        </span>
                         <span className="product-price">
                           Prix: {product.price} FCFA/{product.unit}
                         </span>
