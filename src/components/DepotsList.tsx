@@ -137,7 +137,6 @@ export default function DepotsList({
                 <div className="products-section">
                   {depot.products.map((product) => (
                     <div key={product.id} className="product-line">
-                      {/* Product Image */}
                       <div className="product-image-container">
                         {product.image || product.image_url ? (
                           <img
@@ -166,14 +165,13 @@ export default function DepotsList({
                         )}
                       </div>
 
-                      {/* Product Info */}
                       <div className="product-info-container">
                         <span className="product-name">{product.name}</span>
                         <span className="product-price">
-                          Prix: {product.price} FCFA/{product.unit}
+                          {product.price} FCFA/{product.unit}
                         </span>
                         <span className="product-stock">
-                          Stock: {product.stock_quantity} {product.unit}
+                          stock : {product.stock_quantity} {product.unit}
                         </span>
                       </div>
                     </div>
