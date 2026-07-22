@@ -4,37 +4,26 @@ export default function UpdateNotification(): ReactNode {
   const [updateAvailable, setUpdateAvailable] = useState<boolean>(false);
 
   useEffect(() => {
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.addEventListener("controllerchange", () => {
-        setUpdateAvailable(false);
-      });
-    }
-
     const checkForUpdates = async () => {
-      if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
-        navigator.serviceWorker.controller.postMessage({
-          type: "SKIP_WAITING",
-        });
+      try {
+        const response = await fetch(`/manifest.json?t=${Date.now()}`);
+        const manifest = await response.json();
 
-        try {
-          const response = await fetch("/manifest.webmanifest");
-          const manifest = await response.json();
+        const currentVersion = localStorage.getItem("app_version");
+        const newVersion = manifest.version || new Date().getTime().toString();
 
-          const currentVersion = sessionStorage.getItem("app_version");
-          const newVersion =
-            manifest.version || new Date().getTime().toString();
-
-          if (currentVersion && currentVersion !== newVersion) {
-            setUpdateAvailable(true);
-          }
-          sessionStorage.setItem("app_version", newVersion);
-        } catch {}
+        if (currentVersion && currentVersion !== newVersion) {
+          setUpdateAvailable(true);
+        }
+        localStorage.setItem("app_version", newVersion);
+      } catch (error) {
+        console.error("Erreur vérification mise à jour:", error);
       }
     };
 
     checkForUpdates();
 
-    const interval = setInterval(checkForUpdates, 60 * 60 * 1000);
+    const interval = setInterval(checkForUpdates, 5 * 60 * 1000);
 
     return () => clearInterval(interval);
   }, []);

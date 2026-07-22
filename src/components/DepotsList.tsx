@@ -94,28 +94,16 @@ export default function DepotsList({
     );
   }
 
-  const nearestDepot = depots[0];
-
   return (
     <div className="depots-list-section">
       <h2 className="section-title"> Dépôts Disponibles</h2>
 
       <div className="depots-container">
         {depots.map((depot) => {
-          const isNearest = depot.id === nearestDepot.id;
           const hasProducts = depot.products && depot.products.length > 0;
 
           return (
-            <div
-              key={depot.id}
-              className={`depot-item ${isNearest ? "nearest" : "fade"}`}
-            >
-              {isNearest && (
-                <div className="nearest-badge">
-                  Le plus proche ({depot.distance} km)
-                </div>
-              )}
-
+            <div key={depot.id} className="depot-item">
               <div className="depot-header">
                 <button
                   className={`favorite-btn ${favorites.includes(depot.id) ? "active" : ""}`}
@@ -130,6 +118,11 @@ export default function DepotsList({
                 </button>
                 <h3 className="depot-name">{depot.name}</h3>
                 <span className="depot-distance"> {depot.distance} km</span>
+                {(depot.tier === "basic" ||
+                  depot.tier === "advanced" ||
+                  depot.tier === "elite") && (
+                  <span className="certified-badge">✓ Certifié</span>
+                )}
               </div>
 
               {/* Afficher les produits si disponibles */}

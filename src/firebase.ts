@@ -237,12 +237,10 @@ export const sortDepotsByTierAndDistance = (
     // Vérifier l'expiration du tier
     const aIsTierActive =
       aTierPriority < 3 &&
-      a.tier_expiry &&
-      new Date(a.tier_expiry) > new Date();
+      (!a.tier_expiry || new Date(a.tier_expiry) > new Date());
     const bIsTierActive =
       bTierPriority < 3 &&
-      b.tier_expiry &&
-      new Date(b.tier_expiry) > new Date();
+      (!b.tier_expiry || new Date(b.tier_expiry) > new Date());
 
     // Si l'un a un tier actif et l'autre non
     if (aIsTierActive && !bIsTierActive) return -1;
@@ -776,10 +774,13 @@ export const getDepotsWithDistance = async (
           ...depot,
           distance: parseFloat(distance.toFixed(2)),
         };
-      })
-      .sort((a, b) => a.distance - b.distance);
+      });
 
-    return { success: true, data: depots };
+    const sortedDepots = sortDepotsByTierAndDistance(
+      depots as DepotWithProducts[],
+    );
+
+    return { success: true, data: sortedDepots };
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Erreur inconnue";
     safeError(" Erreur récupération dépôts avec distance:", errorMsg);
@@ -1003,9 +1004,11 @@ export const getDepotsWithProductsByCategory = async (
     // Attendre que TOUTES les requetes en parallele se terminent
     const results = await Promise.all(depotsWithProductsPromises);
     const depotsWithProducts = results.filter((result) => result !== null);
-    depotsWithProducts.sort((a, b) => a.distance - b.distance);
+    const sortedDepots = sortDepotsByTierAndDistance(
+      depotsWithProducts as DepotWithProducts[],
+    );
 
-    return { success: true, data: depotsWithProducts };
+    return { success: true, data: sortedDepots };
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Erreur inconnue";
     safeError(
@@ -1078,9 +1081,11 @@ export const getAllDepotsWithAllProducts = async (
 
     const results = await Promise.all(depotsWithProductsPromises);
     const depotsWithProducts = results.filter((result) => result !== null);
-    depotsWithProducts.sort((a, b) => a.distance - b.distance);
+    const sortedDepots = sortDepotsByTierAndDistance(
+      depotsWithProducts as DepotWithProducts[],
+    );
 
-    return { success: true, data: depotsWithProducts };
+    return { success: true, data: sortedDepots };
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Erreur inconnue";
     safeError(" Erreur récupération complète depots:", errorMsg);
@@ -1205,13 +1210,14 @@ export const listenToDepotsAndProducts = (
       });
 
       const results = await Promise.all(depotsWithProductsPromises);
-      const depotsWithProducts = results
-        .filter((result) => result !== null)
-        .sort((a, b) => a.distance - b.distance);
+      const depotsWithProducts = results.filter((result) => result !== null);
+      const sortedDepots = sortDepotsByTierAndDistance(
+        depotsWithProducts as DepotWithProducts[],
+      );
 
       lastDepotSnapshot = depotsData;
       lastUpdate = Date.now();
-      onUpdate(depotsWithProducts);
+      onUpdate(sortedDepots);
     };
 
     const unsubscribe = onValue(depotsRef, async (snapshot) => {
@@ -1374,13 +1380,13 @@ export const getDepotsWithProductsPaginated = async (
     });
 
     const results = await Promise.all(depotsWithProductsPromises);
-    const depotsWithProducts = results
-      .filter((result) => result !== null)
-      .sort((a, b) => a.distance - b.distance);
-
+    const depotsWithProducts = results.filter((result) => result !== null);
+    const sortedDepots = sortDepotsByTierAndDistance(
+      depotsWithProducts as DepotWithProducts[],
+    );
     return {
       success: true,
-      data: depotsWithProducts,
+      data: sortedDepots,
     };
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Erreur inconnue";

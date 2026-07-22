@@ -48,23 +48,21 @@ function App(): ReactNode {
     return cacheData?.lastSync ? new Date(cacheData.lastSync) : null;
   });
 
-  const [isOnline, setIsOnline] = useState<boolean>(true); //Statut de la connexion Realtime
+  const [isOnline, setIsOnline] = useState<boolean>(true);
   const [isCached, setIsCached] = useState<boolean>(() => {
     const cacheData = loadFromCache();
     return cacheData ? cacheData.categories?.length > 0 : false;
   });
 
-  // 📍 Position GPS de l'utilisateur
   const [userLat, setUserLat] = useState<number>(() => {
     const saved = localStorage.getItem("user_latitude");
-    return saved ? parseFloat(saved) : -4.2726; // Fallback: Brazzaville
+    return saved ? parseFloat(saved) : -4.2726;
   });
   const [userLon, setUserLon] = useState<number>(() => {
     const saved = localStorage.getItem("user_longitude");
-    return saved ? parseFloat(saved) : 15.2663; // Fallback: Brazzaville
+    return saved ? parseFloat(saved) : 15.2663;
   });
 
-  // 🗳️ Système de vote
   const [showVotingGuidelines, setShowVotingGuidelines] =
     useState<boolean>(false);
   const [votingStatus, setVotingStatus] = useState<{
@@ -88,6 +86,7 @@ function App(): ReactNode {
   });
   const [showVotingStats, setShowVotingStats] = useState<boolean>(false);
   const [notification, setNotification] = useState<string | null>(null);
+  const [showHelpModal, setShowHelpModal] = useState<boolean>(false);
 
   const isVotingUiActive =
     votingStatus.active && votingPhaseStatus === "VOTING_ACTIVE";
@@ -139,7 +138,7 @@ function App(): ReactNode {
     checkVotingStatus();
   }, [user]);
 
-  // �️ Écouter le statut des votes en temps réel depuis Firebase
+  // Écouter le statut des votes en temps réel depuis Firebase
   useEffect(() => {
     const unsubscribe = listenToVotingStatus((status) => {
       setVotingPhaseStatus(status);
@@ -526,6 +525,13 @@ function App(): ReactNode {
             <button className="dark-mode-btn" onClick={toggleDarkMode}>
               {darkMode ? "S" : "N"}
             </button>
+            <button
+              className="help-btn"
+              onClick={() => setShowHelpModal(true)}
+              title="Aide"
+            >
+              ?
+            </button>
           </div>
         </div>
       </header>
@@ -657,10 +663,105 @@ function App(): ReactNode {
         onClose={() => setShowVotingStats(false)}
       />
 
+      {/* Modal Aide */}
+      {showHelpModal && (
+        <div
+          className="help-modal-overlay"
+          onClick={() => setShowHelpModal(false)}
+        >
+          <div
+            className="help-modal-content"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="help-modal-header">
+              <h2> À propos de Maman Power</h2>
+              <button
+                className="help-modal-close"
+                onClick={() => setShowHelpModal(false)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="help-modal-body">
+              <div className="help-section">
+                <h3> Qu'est-ce que Maman Power ?</h3>
+                <p>
+                  Maman Power est une application qui connecte les mamans aux
+                  dépôts de produits alimentaires et ménagers proches de chez
+                  elles.
+                </p>
+              </div>
+              <div className="help-section">
+                <h3> Comment ça fonctionne?</h3>
+                <ul>
+                  <li>
+                    <strong>Localisation:</strong> L'application utilise votre
+                    position pour trouver les dépôts les plus proches
+                  </li>
+                  <li>
+                    <strong>Catégories:</strong> Parcourez les produits par
+                    catégorie (Poisson & Viande, Charbon, Boissons, etc.)
+                  </li>
+                  <li>
+                    <strong>Contact:</strong> Appelez ou contactez les dépôts
+                    directement via WhatsApp
+                  </li>
+                  <li>
+                    <strong>Favoris:</strong> Sauvegardez vos dépôts préférés
+                    pour un accès rapide
+                  </li>
+                </ul>
+              </div>
+              <div className="help-section">
+                <h3>Système de Vote</h3>
+                <p>
+                  Votez pour vos dépôts préférés pour les aider à grimper dans
+                  le classement trimestriel. Les meilleurs dépôts gagnent en
+                  visibilité!
+                </p>
+              </div>
+              <div className="help-section">
+                <h3> Badge Certifié</h3>
+                <p>
+                  Les dépôts avec le badge "✓ Certifié" ont souscrit à un
+                  abonnement premium et garantissent un service de qualité.
+                </p>
+              </div>
+              <div className="help-section">
+                <h3>💬 Besoin d'aide ?</h3>
+                <p>
+                  Utilisez le bouton WhatsApp au bas de l'Application pour nous
+                  contacter et donner votre avis sur l'application.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Footer */}
       <footer className="app-footer">
         <p>© 2026 | Maman Power Genesis v1.0 | Powered by Vision Unique</p>
+        <a
+          href="https://wa.me/242067678128?text=Bonjour,%20je%20voudrais%20donner%20mon%20avis%20sur%20l'application%20Maman%20Power"
+          className="whatsapp-feedback-btn"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          💬 Donnez votre avis sur WhatsApp
+        </a>
       </footer>
+
+      {/* Fixed Logo */}
+      <a
+        href="https://geniusland.netlify.app"
+        className="fixed-logo"
+        target="_blank"
+        rel="noopener noreferrer"
+        title="Vision Unique"
+      >
+        <img src="/photo-pro.jpg" alt="Vision Unique Logo" />
+      </a>
     </div>
   );
 }
