@@ -728,6 +728,14 @@ const isDepotVisible = (depot: any): boolean => {
 
   if (hasExpiredSubscription) return false;
 
+  const hasExpiredTier =
+    depot.tier_expiry && new Date(depot.tier_expiry) <= now;
+
+  if (hasExpiredTier) {
+    depot.tier = "none";
+    depot.tier_expiry = null;
+  }
+
   const hasActiveSubscription =
     depot.subscription_status === "active" || !depot.subscription_status;
 
