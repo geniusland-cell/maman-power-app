@@ -13,6 +13,7 @@ import {
   isVotingActive,
   voteForDepot,
   listenToVotingStatus,
+  isDepotVisible,
 } from "./firebase";
 import { useAuth } from "./auth";
 import UnifiedLogin from "./components/UnifiedLogin";
@@ -94,11 +95,7 @@ function App(): ReactNode {
   //  pagintion des depots
   const pageSize = 20;
   const [displayedDepots, setDisplayedDepots] = useState<DepotWithProducts[]>(
-    () => {
-      // Charger les dépôts du cache au démarrage
-      const cacheData = loadFromCache();
-      return cacheData?.depots || [];
-    },
+    [],
   );
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [totalDepots, setTotalDepots] = useState<number>(0);
@@ -241,14 +238,33 @@ function App(): ReactNode {
   };
 
   useEffect(() => {
-    const cacheData = loadFromCache();
-    if (cacheData?.depots && cacheData.depots.length > 0) {
-      setDisplayedDepots(cacheData.depots);
-      setTotalDepots(cacheData.depots.length);
-      setIsCached(true);
-      setIsOnline(false);
+    if (!user) {
+      const cacheData = loadFromCache();
+      const visibleCachedDepots = (cacheData?.depots || [])
+        .filter((depot) => depot && isDepotVisible(depot))
+        .map((depot) => ({ ...depot }));
+
+      if (visibleCachedDepots.length > 0) {
+        setDisplayedDepots(visibleCachedDepots);
+        setTotalDepots(visibleCachedDepots.length);
+        setIsCached(true);
+        setIsOnline(false);
+      } else {
+        setDisplayedDepots([]);
+        setTotalDepots(0);
+        setIsCached(false);
+        setIsOnline(true);
+      }
+    } else {
+      // Lorsqu'un vendeur est authentifié, on évite de recharger un snapshot stale
+      // depuis le cache local. Le flux Firebase live doit reconstruire l'affichage.
+      clearCache();
+      setDisplayedDepots([]);
+      setTotalDepots(0);
+      setIsCached(false);
+      setIsOnline(true);
     }
-  }, []);
+  }, [user]);
   useEffect(() => {
     if (user) {
       ensureCategoriesExist();

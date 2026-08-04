@@ -717,29 +717,54 @@ function calculateDistance(
   return R * c;
 }
 
-const isDepotVisible = (depot: any): boolean => {
-  if (depot.is_active !== true) return false;
-
-  if (depot.payment_pending === true) return false;
-
-  const now = new Date();
-  const hasExpiredSubscription =
-    depot.subscription_expiry && new Date(depot.subscription_expiry) <= now;
-
-  if (hasExpiredSubscription) return false;
-
-  const hasExpiredTier =
-    depot.tier_expiry && new Date(depot.tier_expiry) <= now;
-
-  if (hasExpiredTier) {
-    depot.tier = "none";
-    depot.tier_expiry = null;
+const parseExpiryDate = (value: unknown): Date | null => {
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
   }
 
-  const hasActiveSubscription =
-    depot.subscription_status === "active" || !depot.subscription_status;
+  if (typeof value === "number" && Number.isFinite(value)) {
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
 
-  return hasActiveSubscription;
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+
+    const parsed = new Date(trimmed);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  return null;
+};
+
+const getDaysRemaining = (value: unknown): number => {
+  const parsedDate = parseExpiryDate(value);
+  if (!parsedDate) return Number.NEGATIVE_INFINITY;
+
+  return Math.ceil((parsedDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+};
+
+export const isDepotVisible = (depot: any): boolean => {
+  if (!depot) return false;
+  if (depot.is_active === false) return false;
+  if (depot.subscription_status === "inactive") return false;
+  if (depot.payment_pending === true) return false;
+
+  const status = depot.subscription_status;
+  if (status && status !== "active" && status !== "free") {
+    return false;
+  }
+
+  const subscriptionDaysRemaining = getDaysRemaining(depot.subscription_expiry);
+  if (subscriptionDaysRemaining <= 0) {
+    console.log(
+      `Dépôt ${depot.name || depot.id} caché: abonnement expiré (${subscriptionDaysRemaining}j restants, ${depot.subscription_expiry})`,
+    );
+    return false;
+  }
+
+  return true;
 };
 
 // obtenir les depot avec leur disrrtance
@@ -881,7 +906,13 @@ export const getDepots = async (): Promise<FirebaseResponse<Depot[]>> => {
 
         const depotsData = snapshot.val();
         const depots = Object.keys(depotsData)
-          .filter((key) => depotsData[key].is_active === true)
+          .filter((key) => {
+            const depot = depotsData[key];
+            return (
+              depot?.is_active !== false &&
+              depot?.subscription_status !== "inactive"
+            );
+          })
           .map((key) => ({ id: key, ...depotsData[key] }));
 
         return { success: true, data: depots };
@@ -942,7 +973,13 @@ export const getDepotsWithProductsByCategory = async (
 
     const depotsData = depotsSnapshot.val();
     const allDepots = Object.keys(depotsData)
-      .filter((key) => depotsData[key].is_active === true)
+      .filter((key) => {
+        const depot = depotsData[key];
+        return (
+          depot?.is_active !== false &&
+          depot?.subscription_status !== "inactive"
+        );
+      })
       .map((key) => ({ id: key, ...depotsData[key] }));
 
     //  Pour chaque depot, chercher les produits EN PARALLELE (plus rapide!)
@@ -1042,7 +1079,13 @@ export const getAllDepotsWithAllProducts = async (
 
     const depotsData = depotsSnapshot.val();
     const allDepots = Object.keys(depotsData)
-      .filter((key) => depotsData[key].is_active === true)
+      .filter((key) => {
+        const depot = depotsData[key];
+        return (
+          depot?.is_active !== false &&
+          depot?.subscription_status !== "inactive"
+        );
+      })
       .map((key) => ({ id: key, ...depotsData[key] }));
 
     // Charger les produits de TOUS les depôts EN PARALLELE
@@ -1269,9 +1312,13 @@ const CACHE_KEY = "maman-power-cache";
  */
 export const saveToCache = (categories: Category[], depots: Depot[]): void => {
   try {
+    const visibleDepots = (depots || [])
+      .filter((depot) => depot && isDepotVisible(depot))
+      .map((depot) => ({ ...depot }));
+
     const cacheData = {
       categories: categories || [],
-      depots: depots || [],
+      depots: visibleDepots,
       lastSync: new Date().toISOString(),
     };
     localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
