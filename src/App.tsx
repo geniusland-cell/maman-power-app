@@ -359,6 +359,8 @@ function App(): ReactNode {
   };
 
   const handleVotingGuidelinesAccept = () => {
+    const quarter = getCurrentQuarter();
+    localStorage.setItem(`voting_guidelines_accepted_${quarter}`, "true");
     setHasAcceptedVoting(true);
     setShowVotingGuidelines(false);
   };
