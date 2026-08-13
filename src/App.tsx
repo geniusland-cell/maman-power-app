@@ -374,6 +374,19 @@ function App(): ReactNode {
     if (!result.success) {
       throw new Error(result.error || "Erreur lors du vote");
     }
+
+    // Afficher le message de collecte de soutien après le vote
+    setTimeout(() => {
+      alert(
+        "✅ Vote enregistré avec succès!\n\n" +
+          "🙏 COLLECTE DE SOUTIEN TRIMESTRIELLE\n\n" +
+          "Pour encourager nos développeurs à créer encore plus d'applications,\n" +
+          "vous pouvez contribuer volontairement de 1 000 FCFA à 15 000 FCFA.\n\n" +
+          "📞 Pour contribuer: 06 767 81 28\n" +
+          "💬 Via WhatsApp ou appel\n\n" +
+          "Merci pour votre participation!",
+      );
+    }, 500);
   };
 
   const handleLogout = () => {
@@ -702,52 +715,163 @@ function App(): ReactNode {
               <div className="help-section">
                 <h3> Qu'est-ce que Maman Power ?</h3>
                 <p>
-                  Maman Power est une application qui connecte les mamans aux
-                  dépôts de produits alimentaires et ménagers proches de chez
-                  elles.
+                  Dans le commerce au Congo, nous comprenons les défis
+                  quotidiens des détaillantes:
+                </p>
+                <ul>
+                  <li>
+                    <strong>La fluctuation des prix:</strong> Les informations
+                    sur les tarifs ne sont pas toujours à jour
+                  </li>
+                  <li>
+                    <strong>La difficulté de comparer:</strong> Il est compliqué
+                    de connaître les offres de plusieurs dépôts rapidement
+                  </li>
+                  <li>
+                    <strong>Le besoin de transparence:</strong> Vous souhaitez
+                    avoir des informations claires et directes
+                  </li>
+                  <li>
+                    <strong>L'optimisation du temps:</strong> Chaque déplacement
+                    compte pour votre activité
+                  </li>
+                </ul>
+                <p>
+                  <strong>
+                    Maman Power facilite votre commerce en créant un lien direct
+                    avec les dépôts:
+                  </strong>
+                </p>
+                <ul>
+                  <li>
+                    <strong>Information en temps réel:</strong> Contactez
+                    directement les dépôts pour avoir les prix actuels
+                  </li>
+                  <li>
+                    <strong>Comparaison facile:</strong> Voyez plusieurs dépôts
+                    en un coup d'œil pour optimiser vos choix
+                  </li>
+                  <li>
+                    <strong>Gain de temps:</strong> Appelez directement sans
+                    vous déplacer inutilement
+                  </li>
+                  <li>
+                    <strong>Relation de confiance:</strong> Les avis des autres
+                    détaillantes vous guident vers les bons partenaires
+                  </li>
+                </ul>
+                <p>
+                  <strong>Notre mission:</strong> Simplifier votre quotidien
+                  commercial en vous donnant accès à l'information dont vous
+                  avez besoin.
                 </p>
               </div>
               <div className="help-section">
-                <h3> Comment ça fonctionne?</h3>
+                <h3> Comment utiliser l'application?</h3>
+                <p>
+                  <strong>Étape 1: Choisissez ce que vous cherchez</strong>
+                </p>
+                <p>
+                  Appuyez sur le type de produit: Charbon, Poisson, Riz,
+                  Boissons, ou autres. L'application vous montre tous les dépôts
+                  qui ont ce produit.
+                </p>
+                <p>
+                  <strong>
+                    Étape 2: Regardez les dépôts près de chez vous
+                  </strong>
+                </p>
+                <p>
+                  L'application vous montre les dépôts les plus proches de votre
+                  position, avec la distance en kilomètres.
+                </p>
+                <p>
+                  <strong>Étape 3: Contactez le dépôt</strong>
+                </p>
+                <p>
+                  Appuyez sur le bouton téléphone pour appeler directement, ou
+                  sur WhatsApp pour envoyer un message. Pas besoin de chercher
+                  les numéros!
+                </p>
+                <p>
+                  <strong>Étape 4: Sauvegardez vos préférés</strong>
+                </p>
+                <p>
+                  Si un dépôt vous plaît, appuyez sur le cœur pour le mettre
+                  dans vos favoris. Vous le retrouverez rapidement la prochaine
+                  fois.
+                </p>
+              </div>
+              <div className="help-section">
+                <h3> L'application est GRATUITE</h3>
+                <p>
+                  Maman Power est gratuite pour toutes les utilisatrices. Vous
+                  pouvez utiliser toutes les fonctionnalités sans payer.
+                </p>
+              </div>
+              <div className="help-section">
+                <h3> Pourquoi utiliser Maman Power?</h3>
                 <ul>
                   <li>
-                    <strong>Localisation:</strong> L'application utilise votre
-                    position pour trouver les dépôts les plus proches
+                    <strong>Gagnez du temps:</strong> Appelez directement les
+                    dépôts sans vous déplacer pour savoir s'ils ont ce que vous
+                    cherchez
                   </li>
                   <li>
-                    <strong>Catégories:</strong> Parcourez les produits par
-                    catégorie (Poisson & Viande, Charbon, Boissons, etc.)
+                    <strong>Comparez les offres:</strong> Voyez plusieurs dépôts
+                    en même temps pour choisir le meilleur prix ou le plus
+                    proche
                   </li>
                   <li>
-                    <strong>Contact:</strong> Appelez ou contactez les dépôts
-                    directement via WhatsApp
+                    <strong>Évitez les déplacements inutiles:</strong> Vérifiez
+                    les stocks avant de partir
                   </li>
                   <li>
-                    <strong>Favoris:</strong> Sauvegardez vos dépôts préférés
-                    pour un accès rapide
+                    <strong>Trouvez des dépôts de confiance:</strong> Les votes
+                    des autres mamans vous guident vers les bons dépôts
                   </li>
                 </ul>
               </div>
               <div className="help-section">
-                <h3>Système de Vote</h3>
+                <h3>Système de Vote et Collecte de Soutien</h3>
                 <p>
-                  Votez pour vos dépôts préférés pour les aider à grimper dans
-                  le classement trimestriel. Les meilleurs dépôts gagnent en
-                  visibilité!
+                  <strong>Les votes se déroulent par trimestre.</strong> Chaque
+                  trimestre, vous pouvez voter pour un dépôt de votre choix.
+                  Votre vote aide les autres mamans à trouver les bons dépôts.
+                  Les dépôts avec le plus de votes apparaissent en premier dans
+                  les résultats.
+                </p>
+                <p>
+                  <strong>Collecte de soutien trimestrielle:</strong> Lors des
+                  périodes de vote, nous organisons aussi une collecte de
+                  soutien de 1 000 FCFA à 15 000 FCFA. Cette contribution
+                  volontaire encourage nos développeurs à créer encore plus
+                  d'applications qui répondent aux problèmes que rencontrent nos
+                  communautés.
+                </p>
+                <p>
+                  <strong>Pour contribuer:</strong> Contactez-nous au{" "}
+                  <strong>06 767 81 28</strong> via WhatsApp ou appel.
+                </p>
+                <p>
+                  Votre participation, par votre vote ou votre contribution,
+                  aide à construire un avenir numérique meilleur pour tous.
                 </p>
               </div>
               <div className="help-section">
                 <h3> Badge Certifié</h3>
                 <p>
-                  Les dépôts avec le badge "✓ Certifié" ont souscrit à un
-                  abonnement premium et garantissent un service de qualité.
+                  Le badge "✓ Certifié" signifie que ce dépôt a payé pour être
+                  mieux visible et s'engage à offrir un bon service. Ces dépôts
+                  apparaissent en premier dans les résultats.
                 </p>
               </div>
               <div className="help-section">
-                <h3>💬 Besoin d'aide ?</h3>
+                <h3> Besoin d'aide ?</h3>
                 <p>
-                  Utilisez le bouton WhatsApp au bas de l'Application pour nous
-                  contacter et donner votre avis sur l'application.
+                  Vous avez une question ou un problème? Appuyez sur le bouton
+                  WhatsApp en bas de l'écran pour nous contacter. Nous sommes là
+                  pour vous aider!
                 </p>
               </div>
             </div>
