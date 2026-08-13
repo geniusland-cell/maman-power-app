@@ -21,6 +21,7 @@ import DepotsList from "./components/DepotsList";
 import UpdateNotification from "./components/UpdateNotification";
 import VotingGuidelinesModal from "./components/VotingGuidelinesModal";
 import VotingChart from "./components/VotingChart";
+import SoutienModal from "./components/SoutienModal";
 import type { Category, DepotWithProducts } from "./types";
 import "./auth.css";
 import "./App.css";
@@ -85,6 +86,7 @@ function App(): ReactNode {
     );
     return accepted === "true";
   });
+  const [showSoutienModal, setShowSoutienModal] = useState<boolean>(false);
   const [showVotingStats, setShowVotingStats] = useState<boolean>(false);
   const [notification, setNotification] = useState<string | null>(null);
   const [showHelpModal, setShowHelpModal] = useState<boolean>(false);
@@ -241,8 +243,8 @@ function App(): ReactNode {
     if (!user) {
       const cacheData = loadFromCache();
       const visibleCachedDepots = (cacheData?.depots || [])
-        .filter((depot) => depot && isDepotVisible(depot))
-        .map((depot) => ({ ...depot }));
+        .filter((depot: any) => depot && isDepotVisible(depot))
+        .map((depot: any) => ({ ...depot }));
 
       if (visibleCachedDepots.length > 0) {
         setDisplayedDepots(visibleCachedDepots);
@@ -375,17 +377,9 @@ function App(): ReactNode {
       throw new Error(result.error || "Erreur lors du vote");
     }
 
-    // Afficher le message de collecte de soutien après le vote
+    // Afficher la modal de soutien après le vote
     setTimeout(() => {
-      alert(
-        "✅ Vote enregistré avec succès!\n\n" +
-          " COLLECTE DE SOUTIEN TRIMESTRIELLE\n\n" +
-          "Pour encourager nos développeurs à créer encore plus d'applications,\n" +
-          "vous pouvez contribuer volontairement de 1 000 FCFA à 15 000 FCFA.\n\n" +
-          "� Pour contribuer: Faites un dépôt sur le numéro 06 767 81 28\n\n" +
-          "💬 Pour plus d'explications, contactez-nous sur WhatsApp au même numéro\n\n" +
-          "Merci pour votre participation!",
-      );
+      setShowSoutienModal(true);
     }, 500);
   };
 
@@ -903,6 +897,12 @@ function App(): ReactNode {
       >
         <img src="/photo-pro.jpg" alt="Vision Unique Logo" />
       </a>
+
+      {/* Soutien Modal */}
+      <SoutienModal
+        isOpen={showSoutienModal}
+        onClose={() => setShowSoutienModal(false)}
+      />
     </div>
   );
 }

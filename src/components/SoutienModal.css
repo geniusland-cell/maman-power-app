@@ -1,0 +1,223 @@
+.soutien-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 16px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.soutien-modal {
+  background: white;
+  border-radius: 16px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease-in-out;
+  position: relative;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.soutien-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.soutien-modal-close:hover {
+  background: #f5f5f5;
+  color: #333;
+}
+
+.soutien-modal-content {
+  padding: 32px 24px 24px;
+  text-align: center;
+}
+
+.soutien-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.soutien-modal h2 {
+  color: #2c3e50;
+  margin: 0 0 24px 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.soutien-section {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.soutien-section h3 {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.soutien-section p {
+  margin: 8px 0;
+  font-size: 14px;
+  line-height: 1.5;
+  opacity: 0.95;
+}
+
+.soutien-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.soutien-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.soutien-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-icon {
+  font-size: 28px;
+}
+
+.btn-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.btn-title {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.btn-number {
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.momo-btn {
+  background: linear-gradient(135deg, #ffc107, #ff9800);
+  color: #333;
+}
+
+.momo-btn:hover {
+  background: linear-gradient(135deg, #ffb300, #f57c00);
+}
+
+.whatsapp-btn {
+  background: linear-gradient(135deg, #25d366, #128c7e);
+  color: white;
+}
+
+.whatsapp-btn:hover {
+  background: linear-gradient(135deg, #1ebe57, #075e54);
+}
+
+.later-btn {
+  background: #f5f5f5;
+  color: #666;
+  font-weight: 500;
+  padding: 12px 20px;
+  text-align: center;
+  border: 1px solid #e0e0e0;
+}
+
+.later-btn:hover {
+  background: #e0e0e0;
+  color: #333;
+}
+
+.soutien-thanks {
+  margin-top: 16px;
+  font-size: 13px;
+  color: #666;
+  font-style: italic;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .soutien-modal {
+    max-width: 100%;
+    margin: 16px;
+  }
+
+  .soutien-modal-content {
+    padding: 24px 20px 20px;
+  }
+
+  .soutien-icon {
+    font-size: 40px;
+  }
+
+  .soutien-modal h2 {
+    font-size: 18px;
+  }
+
+  .soutien-section {
+    padding: 16px;
+  }
+
+  .soutien-section h3 {
+    font-size: 16px;
+  }
+
+  .soutien-section p {
+    font-size: 13px;
+  }
+}
