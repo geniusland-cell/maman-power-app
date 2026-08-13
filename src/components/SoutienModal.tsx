@@ -13,13 +13,20 @@ const SoutienModal = ({ isOpen, onClose }: SoutienModalProps): ReactNode => {
   const whatsappNumber = "242067678128";
 
   const handleCopyNumber = () => {
+    const cleanNumber = phoneNumber.replace(/\s/g, "");
     navigator.clipboard.writeText(phoneNumber).then(() => {
-      alert("Numéro copié: " + phoneNumber);
+      alert(`Numéro copié: ${phoneNumber}\n\nAppel lancé...`);
+
+      setTimeout(() => {
+        window.location.href = `tel:${cleanNumber}`;
+      }, 100);
     });
   };
 
   const handleWhatsAppClick = () => {
-    const message = encodeURIComponent("Bonjour, je souhaite soutenir l'équipe Maman Power !");
+    const message = encodeURIComponent(
+      "Bonjour, je souhaite soutenir l'équipe Maman Power !",
+    );
     window.open(`https://wa.me/${whatsappNumber}?text=${message}`, "_blank");
   };
 
@@ -42,8 +49,8 @@ const SoutienModal = ({ isOpen, onClose }: SoutienModalProps): ReactNode => {
             </p>
             <p>
               Pour nous aider à maintenir les serveurs et améliorer
-              l'application, vous pouvez faire une contribution volontaire (de
-              1 000 FCFA à 15 000 FCFA).
+              l'application, vous pouvez faire une contribution volontaire (de 1
+              000 FCFA à 15 000 FCFA).
             </p>
           </div>
 
@@ -56,7 +63,10 @@ const SoutienModal = ({ isOpen, onClose }: SoutienModalProps): ReactNode => {
               </div>
             </button>
 
-            <button className="soutien-btn whatsapp-btn" onClick={handleWhatsAppClick}>
+            <button
+              className="soutien-btn whatsapp-btn"
+              onClick={handleWhatsAppClick}
+            >
               <span className="btn-icon">💬</span>
               <div className="btn-content">
                 <span className="btn-title">WhatsApp</span>
