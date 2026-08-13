@@ -379,11 +379,11 @@ function App(): ReactNode {
     setTimeout(() => {
       alert(
         "✅ Vote enregistré avec succès!\n\n" +
-          "🙏 COLLECTE DE SOUTIEN TRIMESTRIELLE\n\n" +
+          " COLLECTE DE SOUTIEN TRIMESTRIELLE\n\n" +
           "Pour encourager nos développeurs à créer encore plus d'applications,\n" +
           "vous pouvez contribuer volontairement de 1 000 FCFA à 15 000 FCFA.\n\n" +
-          "📞 Pour contribuer: 06 767 81 28\n" +
-          "💬 Via WhatsApp ou appel\n\n" +
+          "� Pour contribuer: Faites un dépôt sur le numéro 06 767 81 28\n\n" +
+          "💬 Pour plus d'explications, contactez-nous sur WhatsApp au même numéro\n\n" +
           "Merci pour votre participation!",
       );
     }, 500);
@@ -850,8 +850,9 @@ function App(): ReactNode {
                   communautés.
                 </p>
                 <p>
-                  <strong>Pour contribuer:</strong> Contactez-nous au{" "}
-                  <strong>06 767 81 28</strong> via WhatsApp ou appel.
+                  <strong>Pour contribuer:</strong> Faites un dépôt sur le
+                  numéro <strong>06 767 81 28</strong>. Pour plus
+                  d'explications, contactez-nous sur WhatsApp au même numéro.
                 </p>
                 <p>
                   Votre participation, par votre vote ou votre contribution,
