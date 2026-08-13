@@ -1206,6 +1206,12 @@ export const listenToDepotsAndProducts = (
         .filter((key) => isDepotVisible(depotsData[key]))
         .map((key) => ({ id: key, ...depotsData[key] }));
 
+      // Charger les votes du trimestre courant
+      const currentQuarter = getCurrentQuarter();
+      const votesRef = ref(db, `votes/${currentQuarter}`);
+      const votesSnapshot = await get(votesRef);
+      const votesData = votesSnapshot.exists() ? votesSnapshot.val() : {};
+
       // Charger les produits SEULEMENT pour les dépôts qui ont changé
       const depotsWithProductsPromises = allDepots.map(async (depot) => {
         try {
@@ -1246,10 +1252,15 @@ export const listenToDepotsAndProducts = (
             coords.lon,
           );
 
+          // Récupérer les votes actuels pour ce dépôt
+          const depotVotes = votesData[depot.id];
+          const currentVotes = depotVotes?.vote_count || 0;
+
           return {
             ...depot,
             distance: parseFloat(distance.toFixed(2)),
             products: products,
+            current_votes: currentVotes,
           };
         } catch (err: unknown) {
           safeError(
