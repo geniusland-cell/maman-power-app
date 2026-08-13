@@ -47,6 +47,7 @@ body {
   min-height: auto;
   height: auto;
   transition: all 0.3s ease;
+  overflow: hidden;
 }
 
 .header-content {
@@ -56,6 +57,7 @@ body {
   flex-wrap: wrap;
   gap: 8px;
   min-height: 0;
+  width: 100%;
 }
 
 .logo {
@@ -87,6 +89,7 @@ body {
   font-size: 13px;
   color: #2c3e50;
   flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
 .user-avatar {
@@ -101,6 +104,30 @@ body {
   font-weight: bold;
   color: white;
   flex-shrink: 0;
+}
+
+.dark-mode-btn,
+.help-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.dark-mode-btn:hover,
+.help-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
 }
 
 .search-section {
@@ -522,11 +549,14 @@ body.dark-mode .theme-switcher {
 
   .header-content {
     gap: 6px;
+    flex-wrap: wrap;
   }
 
   .logo {
     font-size: 16px;
     gap: 5px;
+    flex: 1;
+    min-width: 0;
   }
 
   .logo-icon {
@@ -538,12 +568,22 @@ body.dark-mode .theme-switcher {
   .user-info {
     font-size: 12px;
     gap: 5px;
+    flex-wrap: wrap;
+    flex: 1;
+    min-width: 0;
   }
 
   .user-avatar {
     width: 24px;
     height: 24px;
     font-size: 10px;
+  }
+
+  .dark-mode-btn,
+  .help-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
   }
 
   .categories-container {

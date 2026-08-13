@@ -148,11 +148,8 @@ function App(): ReactNode {
         setNotification("🚫 Les votes sont terminés pour ce trimestre");
       } else if (status === "VOTING_ACTIVE") {
         setNotification(" Les votes sont ouverts!");
-        // Relancer la politique de confidentialité
-        const quarter = getCurrentQuarter();
-        localStorage.removeItem(`voting_guidelines_accepted_${quarter}`);
-        setHasAcceptedVoting(false);
-        if (user) {
+        // Ne pas forcer la réaffichage des règles si déjà acceptées
+        if (!hasAcceptedVoting && user) {
           setShowVotingGuidelines(true);
         }
       } else {
