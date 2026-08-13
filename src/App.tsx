@@ -22,6 +22,7 @@ import UpdateNotification from "./components/UpdateNotification";
 import VotingGuidelinesModal from "./components/VotingGuidelinesModal";
 import VotingChart from "./components/VotingChart";
 import SoutienModal from "./components/SoutienModal";
+import QRCodeModal from "./components/QRCodeModal";
 import type { Category, DepotWithProducts } from "./types";
 import "./auth.css";
 import "./App.css";
@@ -90,6 +91,7 @@ function App(): ReactNode {
   const [showVotingStats, setShowVotingStats] = useState<boolean>(false);
   const [notification, setNotification] = useState<string | null>(null);
   const [showHelpModal, setShowHelpModal] = useState<boolean>(false);
+  const [showQRModal, setShowQRModal] = useState<boolean>(false);
 
   const isVotingUiActive =
     votingStatus.active && votingPhaseStatus === "VOTING_ACTIVE";
@@ -548,6 +550,13 @@ function App(): ReactNode {
               {darkMode ? "S" : "N"}
             </button>
             <button
+              className="qr-btn"
+              onClick={() => setShowQRModal(true)}
+              title="Partager l'application"
+            >
+              QR
+            </button>
+            <button
               className="help-btn"
               onClick={() => setShowHelpModal(true)}
               title="Aide"
@@ -902,6 +911,9 @@ function App(): ReactNode {
         isOpen={showSoutienModal}
         onClose={() => setShowSoutienModal(false)}
       />
+
+      {/* QR Code Modal */}
+      <QRCodeModal isOpen={showQRModal} onClose={() => setShowQRModal(false)} />
     </div>
   );
 }

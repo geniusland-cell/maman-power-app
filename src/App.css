@@ -107,7 +107,8 @@ body {
 }
 
 .dark-mode-btn,
-.help-btn {
+.help-btn,
+.qr-btn {
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -125,7 +126,8 @@ body {
 }
 
 .dark-mode-btn:hover,
-.help-btn:hover {
+.help-btn:hover,
+.qr-btn:hover {
   transform: scale(1.1);
   box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
 }
@@ -580,7 +582,8 @@ body.dark-mode .theme-switcher {
   }
 
   .dark-mode-btn,
-  .help-btn {
+  .help-btn,
+  .qr-btn {
     width: 28px;
     height: 28px;
     font-size: 12px;

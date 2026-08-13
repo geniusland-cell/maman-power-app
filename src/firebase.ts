@@ -14,6 +14,12 @@ import {
   onValue,
   update,
 } from "firebase/database";
+import {
+  getStorage,
+  ref as storageRef,
+  uploadBytes,
+  getDownloadURL,
+} from "firebase/storage";
 import type {
   User,
   Depot,
@@ -54,6 +60,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getDatabase(app);
+export const storage = getStorage(app);
 
 // Cache des quartiers avec leurs coordonnées
 let quartiersCache: Map<string, { latitude: number; longitude: number }> =
