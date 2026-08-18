@@ -1,6 +1,6 @@
 import { useState, ReactNode } from "react";
 import type { DepotWithProducts } from "../types";
-import { optimizeModalImage } from "../utils/cloudinary";
+import { optimizeModalImage, optimizeThumbnail } from "../utils/cloudinary";
 import "./DepotsList.css";
 
 interface DepotsListProps {
@@ -133,7 +133,9 @@ export default function DepotsList({
                       <div className="product-image-container">
                         {product.image || product.image_url ? (
                           <img
-                            src={product.image || product.image_url!}
+                            src={optimizeThumbnail(
+                              product.image || product.image_url!,
+                            )}
                             alt={product.name}
                             className="product-thumb"
                             onClick={() =>
@@ -178,11 +180,14 @@ export default function DepotsList({
                   {depot.promo_image_url && (
                     <div className="promo-image-container">
                       <img
-                        src={depot.promo_image_url}
+                        src={optimizeThumbnail(depot.promo_image_url)}
                         alt="Promo"
                         className="promo-image"
                         onClick={() =>
-                          window.open(depot.promo_image_url, "_blank")
+                          window.open(
+                            optimizeModalImage(depot.promo_image_url),
+                            "_blank",
+                          )
                         }
                       />
                     </div>
