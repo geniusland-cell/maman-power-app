@@ -747,15 +747,17 @@ function App(): ReactNode {
                 <ul>
                   <li>
                     <strong>Information en temps réel:</strong> Contactez
-                    directement les dépôts pour avoir les prix actuels
+                    directement notre app  pour avoir les prix actuels des differents dépots
                   </li>
                   <li>
                     <strong>Comparaison facile:</strong> Voyez plusieurs dépôts
                     en un coup d'œil pour optimiser vos choix
                   </li>
                   <li>
-                    <strong>Gain de temps:</strong> Appelez directement sans
-                    vous déplacer inutilement
+                    <strong>Gain de temps:</strong> En consultant notre App, vous planifiez
+                    l'integralité de la somme dont vous aviez besoin,Ou si possible commander directment 
+                    via l'app. plus de surpise sur
+                    la baisse ou la montée des prix. vous évitant de vous déplacer inutilement
                   </li>
                   <li>
                     <strong>Relation de confiance:</strong> Les avis des autres
@@ -785,7 +787,8 @@ function App(): ReactNode {
                 </p>
                 <p>
                   L'application vous montre les dépôts les plus proches de votre
-                  position, avec la distance en kilomètres.
+                  position, avec la distance en kilomètres vous avez
+                  la possibilité de verifier la localisation du depot en cliquant sur info.
                 </p>
                 <p>
                   <strong>Étape 3: Contactez le dépôt</strong>
@@ -793,7 +796,7 @@ function App(): ReactNode {
                 <p>
                   Appuyez sur le bouton téléphone pour appeler directement, ou
                   sur WhatsApp pour envoyer un message. Pas besoin de chercher
-                  les numéros!
+                  les numéros! si vous voulez commander directement depuis chez vous. 
                 </p>
                 <p>
                   <strong>Étape 4: Sauvegardez vos préférés</strong>
@@ -807,7 +810,7 @@ function App(): ReactNode {
               <div className="help-section">
                 <h3> L'application est GRATUITE</h3>
                 <p>
-                  Maman Power est gratuite pour toutes les utilisatrices. Vous
+                  Maman Power est gratuite pour toutes les utilisatrices ou utilisateurs. Vous
                   pouvez utiliser toutes les fonctionnalités sans payer.
                 </p>
               </div>
@@ -816,8 +819,8 @@ function App(): ReactNode {
                 <ul>
                   <li>
                     <strong>Gagnez du temps:</strong> Appelez directement les
-                    dépôts sans vous déplacer pour savoir s'ils ont ce que vous
-                    cherchez
+                    dépôts si vous voulez commander sans fermer votre etal,
+                    consulter l'App pour voir les produits disponibles
                   </li>
                   <li>
                     <strong>Comparez les offres:</strong> Voyez plusieurs dépôts
@@ -874,9 +877,10 @@ function App(): ReactNode {
                 <p>
                   Vous avez une question ou un problème? Appuyez sur le bouton
                   WhatsApp en bas de l'écran pour nous contacter. Nous sommes là
-                  pour vous aider!
+                  pour vous aider! 
                 </p>
-              </div>
+              </div>   
+              
             </div>
           </div>
         </div>
