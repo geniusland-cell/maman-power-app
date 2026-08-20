@@ -746,7 +746,7 @@ function App(): ReactNode {
                 </p>
                 <ul>
                   <li>
-                    <strong>Information en temps réel:</strong> Contactez
+                    <strong>Information en temps réel:</strong> Consulter
                     directement notre app  pour avoir les prix actuels des differents dépots
                   </li>
                   <li>
