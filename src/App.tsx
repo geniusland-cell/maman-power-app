@@ -91,7 +91,13 @@ function App(): ReactNode {
   const [showVotingStats, setShowVotingStats] = useState<boolean>(false);
   const [notification, setNotification] = useState<string | null>(null);
   const [showHelpModal, setShowHelpModal] = useState<boolean>(false);
+  const [showTermsModal, setShowTermsModal] = useState<boolean>(false);
   const [showQRModal, setShowQRModal] = useState<boolean>(false);
+  const [votingClosedNotified, setVotingClosedNotified] = useState<boolean>(() => {
+    const quarter = getCurrentQuarter();
+    const notified = localStorage.getItem(`voting_closed_notified_${quarter}`);
+    return notified === "true";
+  });
 
   const isVotingUiActive =
     votingStatus.active && votingPhaseStatus === "VOTING_ACTIVE";
@@ -147,7 +153,13 @@ function App(): ReactNode {
       // Afficher une notification selon le statut
       if (status === "VOTING_CLOSED") {
         setShowVotingGuidelines(false);
-        setNotification("🚫 Les votes sont terminés pour ce trimestre");
+        // Ne montrer la notification qu'une seule fois par trimestre
+        if (!votingClosedNotified) {
+          setNotification("🚫 Les votes sont terminés pour ce trimestre");
+          const quarter = getCurrentQuarter();
+          localStorage.setItem(`voting_closed_notified_${quarter}`, "true");
+          setVotingClosedNotified(true);
+        }
       } else if (status === "VOTING_ACTIVE") {
         setNotification(" Les votes sont ouverts!");
         // Ne pas forcer la réaffichage des règles si déjà acceptées
@@ -167,7 +179,7 @@ function App(): ReactNode {
     return () => {
       unsubscribe();
     };
-  }, [user]);
+  }, [user, hasAcceptedVoting, votingClosedNotified]);
 
   // � Récupérer la position GPS de l'utilisateur au démarrage
   useEffect(() => {
@@ -313,7 +325,6 @@ function App(): ReactNode {
     if (!selectedCategory || displayedDepots.length === 0) return [];
 
     const categoryMappings: Record<string, string[]> = {
-      "Poisson & Viande": ["Poisson", "Viande", "Poisson & Viande"],
       "Fruit et Legume": ["Fruits", "Fruit et Legume"],
       "Epiceries/Vivre secs": ["Vivriers", "Epiceries/Vivre secs"],
     };
@@ -390,9 +401,6 @@ function App(): ReactNode {
   };
 
   const normalizeCategoryName = (categoryName: string): string => {
-    if (categoryName === "Poisson" || categoryName === "Viande") {
-      return "Poisson & Viande";
-    }
     if (categoryName === "Fruits") {
       return "Fruit et Legume";
     }
@@ -403,12 +411,13 @@ function App(): ReactNode {
   };
 
   const categoryEmoji = (categoryName: string): string => {
-    if (categoryName === "Poisson & Viande") return "🧊";
+    if (categoryName === "Poisson") return "🐟";
+    if (categoryName === "Viande") return "�";
     if (categoryName === "Charbon") return "🪵";
     if (categoryName === "Boissons") return "🍾";
     if (categoryName === "Epiceries/Vivre secs") return "🛒";
     if (categoryName === "Fruit et Legume") return "🍅";
-    return "📦";
+    return "";
   };
 
   const categories = Array.from(
@@ -557,6 +566,13 @@ function App(): ReactNode {
               QR
             </button>
             <button
+              className="terms-btn"
+              onClick={() => setShowTermsModal(true)}
+              title="Conditions d'utilisation"
+            >
+              ⚖️
+            </button>
+            <button
               className="help-btn"
               onClick={() => setShowHelpModal(true)}
               title="Aide"
@@ -615,11 +631,7 @@ function App(): ReactNode {
               <div className="category-count">
                 {displayedDepots.filter((d) =>
                   d.products.some((p) =>
-                    category.name === "Poisson & Viande"
-                      ? ["Poisson", "Viande", "Poisson & Viande"].includes(
-                          p.category,
-                        )
-                      : category.name === "Fruit et Legume"
+                    category.name === "Fruit et Legume"
                         ? ["Fruits", "Fruit et Legume"].includes(p.category)
                         : category.name === "Epiceries/Vivre secs"
                           ? ["Vivriers", "Epiceries/Vivre secs"].includes(
@@ -879,8 +891,75 @@ function App(): ReactNode {
                   WhatsApp en bas de l'écran pour nous contacter. Nous sommes là
                   pour vous aider! 
                 </p>
-              </div>   
-              
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Conditions d'utilisation */}
+      {showTermsModal && (
+        <div
+          className="help-modal-overlay"
+          onClick={() => setShowTermsModal(false)}
+        >
+          <div
+            className="help-modal-content"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="help-modal-header">
+              <h2> Conditions d'utilisation</h2>
+              <button
+                className="help-modal-close"
+                onClick={() => setShowTermsModal(false)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="help-modal-body">
+              <div className="help-section">
+                <h3> Non-responsabilité sur les stocks et prix</h3>
+                <p>
+                  Les prix et disponibilités affichés sont saisis sous la
+                  responsabilité exclusive des dépôts partenaires. Maman Power ne
+                  garantit pas l'exactitude des informations en temps réel.
+                </p>
+              </div>
+              <div className="help-section">
+                <h3> Qualité de la marchandise</h3>
+                <p>
+                  Maman Power n'intervient pas dans la chaîne du froid, le
+                  stockage ou la livraison des produits. La qualité des produits
+                  relève de la responsabilité exclusive des dépôts partenaires.
+                </p>
+              </div>
+              <div className="help-section">
+                <h3>🤝 Rôle d'intermédiaire</h3>
+                <p>
+                  La plateforme est un outil technologique de mise en relation et
+                  ne réalise aucune vente directe de denrées alimentaires. Maman
+                  Power agit uniquement comme intermédiaire entre les détaillantes
+                  et les dépôts.
+                </p>
+              </div>
+              <div className="help-section">
+                <h3> Protection des données</h3>
+                <p>
+                  Maman Power s'engage à protéger les données personnelles
+                  conformément à la législation en vigueur. Vos informations sont
+                  utilisées uniquement pour améliorer le service et faciliter la
+                  mise en relation.
+                </p>
+              </div>
+              <div className="help-section">
+                <h3> Modèle économique</h3>
+                <p>
+                  Maman Power fonctionne via un système d'abonnements de services
+                  pour les dépôts partenaires. L'application reste gratuite pour
+                  les utilisatrices.
+                </p>
+              </div>
             </div>
           </div>
         </div>
