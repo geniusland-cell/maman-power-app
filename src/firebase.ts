@@ -16,9 +16,6 @@ import {
 } from "firebase/database";
 import {
   getStorage,
-  ref as storageRef,
-  uploadBytes,
-  getDownloadURL,
 } from "firebase/storage";
 import type {
   User,
@@ -1473,15 +1470,16 @@ export const ensureCategoriesExist = async (): Promise<void> => {
     const categoriesRef = ref(db, "categories");
     const categoriesSnapshot = await get(categoriesRef);
 
-    if (categoriesSnapshot.exists()) {
-      return;
-    }
-
     const defaultCategories = [
       {
-        name: "Poisson & Viande",
-        emoji: "🧊",
-        description: "Poissons et viande frais",
+        name: "Poisson",
+        emoji: "🐟",
+        description: "Poissons frais",
+      },
+      {
+        name: "Viande",
+        emoji: "🥩",
+        description: "Viandes fraîches",
       },
       {
         name: "Fruit et Legume",
@@ -1505,18 +1503,34 @@ export const ensureCategoriesExist = async (): Promise<void> => {
       },
     ];
 
-    for (const category of defaultCategories) {
-      const catRef = push(categoriesRef);
-      await set(catRef, {
-        name: category.name,
-        emoji: category.emoji,
-        description: category.description,
-        is_active: true,
-        created_at: new Date().toISOString(),
-      });
+    if (categoriesSnapshot.exists()) {
+      const existingCategories = categoriesSnapshot.val();
+
+      // Check if "Poisson & Viande" exists and needs to be migrated
+      if (existingCategories["Poisson & Viande"]) {
+        // Remove old combined category
+        await set(ref(db, "categories/Poisson & Viande"), null);
+        safeLog(" Ancienne catégorie 'Poisson & Viande' supprimée");
+      }
+
+      // Add missing categories
+      for (const category of defaultCategories) {
+        if (!existingCategories[category.name]) {
+          const categoryRef = ref(db, `categories/${category.name}`);
+          await set(categoryRef, category);
+          safeLog(` Catégorie '${category.name}' créée`);
+        }
+      }
+    } else {
+      // Create all default categories
+      for (const category of defaultCategories) {
+        const categoryRef = ref(db, `categories/${category.name}`);
+        await set(categoryRef, category);
+      }
+      safeLog(" Catégories par défaut créées");
     }
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Erreur inconnue";
-    safeError("❌ Erreur initialisation catégories:", errorMsg);
+    safeError(" Erreur création catégories:", errorMsg);
   }
 };
