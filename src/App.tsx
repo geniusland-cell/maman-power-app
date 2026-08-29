@@ -6,7 +6,6 @@ import {
   loadFromCache,
   clearCache,
   getDepotsWithProductsPaginated,
-  ensureCategoriesExist,
   loadQuartiersCache,
   backfillDepotCoordinates,
   getCurrentQuarter,
@@ -51,7 +50,7 @@ function App(): ReactNode {
     return cacheData?.lastSync ? new Date(cacheData.lastSync) : null;
   });
 
-  const [isOnline, setIsOnline] = useState<boolean>(true);
+  const [isOnline, setIsOnline] = useState<boolean>(() => navigator.onLine);
   const [isCached, setIsCached] = useState<boolean>(() => {
     const cacheData = loadFromCache();
     return cacheData ? cacheData.categories?.length > 0 : false;
@@ -128,6 +127,20 @@ function App(): ReactNode {
     };
 
     initializeAppData();
+  }, []);
+
+  // Détecter les changements de connexion internet
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
   }, []);
 
   // 🗳️ Vérifier le statut du vote au démarrage
@@ -278,11 +291,6 @@ function App(): ReactNode {
       setIsOnline(true);
     }
   }, [user]);
-  useEffect(() => {
-    if (user) {
-      ensureCategoriesExist();
-    }
-  }, [user?.id]);
 
   useEffect(() => {
     if (user) {
