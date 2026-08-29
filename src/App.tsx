@@ -143,6 +143,23 @@ function App(): ReactNode {
     };
   }, []);
 
+  // Détecter quand l'app revient du background et forcer la reconnexion Firebase
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && user) {
+        // L'app revient du background, forcer le rechargement des données
+        console.log('App visible again, reloading Firebase data...');
+        loadMoreDepots(0);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [user]);
+
   // 🗳️ Vérifier le statut du vote au démarrage
   useEffect(() => {
     const checkVotingStatus = async () => {
