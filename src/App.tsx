@@ -146,25 +146,30 @@ function App(): ReactNode {
   // Détecter quand l'app revient du background et forcer la reconnexion Firebase
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && user) {
-        // L'app revient du background
-        if (navigator.onLine) {
-          // Si en ligne, forcer le rechargement des données
-          console.log('App visible again, reloading Firebase data...');
-          loadMoreDepots(0);
-        } else {
-          // Si hors ligne, afficher le cache
-          console.log('App visible again but offline, showing cache...');
-          const cacheData = loadFromCache();
-          const visibleCachedDepots = (cacheData?.depots || [])
-            .filter((depot: any) => depot && isDepotVisible(depot))
-            .map((depot: any) => ({ ...depot }));
+      if (document.visibilityState === 'visible') {
+        // L'app revient du background - forcer la mise à jour de l'état de connexion
+        const actualOnlineStatus = navigator.onLine;
+        setIsOnline(actualOnlineStatus);
+        console.log('App visible again, connection status:', actualOnlineStatus ? 'online' : 'offline');
 
-          if (visibleCachedDepots.length > 0) {
-            setDisplayedDepots(visibleCachedDepots);
-            setTotalDepots(visibleCachedDepots.length);
-            setIsCached(true);
-            setIsOnline(false);
+        if (user) {
+          if (actualOnlineStatus) {
+            // Si en ligne, forcer le rechargement des données
+            console.log('Reloading Firebase data...');
+            loadMoreDepots(0);
+          } else {
+            // Si hors ligne, afficher le cache
+            console.log('Showing cache...');
+            const cacheData = loadFromCache();
+            const visibleCachedDepots = (cacheData?.depots || [])
+              .filter((depot: any) => depot && isDepotVisible(depot))
+              .map((depot: any) => ({ ...depot }));
+
+            if (visibleCachedDepots.length > 0) {
+              setDisplayedDepots(visibleCachedDepots);
+              setTotalDepots(visibleCachedDepots.length);
+              setIsCached(true);
+            }
           }
         }
       }
