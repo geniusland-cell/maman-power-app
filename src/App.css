@@ -518,54 +518,73 @@ body.dark-mode {
 }
 
 /* Particle background for dark mode */
-body.dark-mode::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  pointer-events: none;
-  z-index: 0;
-  overflow: hidden;
-}
-
-body.dark-mode::after {
-  content: "";
+body.dark-mode .particle-1 {
   position: fixed;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.25);
   animation: floatBg 20s infinite ease-in-out;
   width: 300px;
   height: 300px;
   top: -100px;
   right: -100px;
-  z-index: 0;
+  z-index: 2;
+  pointer-events: none;
 }
 
 body.dark-mode .particle-2 {
   position: fixed;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.25);
   animation: floatBg 20s infinite ease-in-out;
   animation-delay: -5s;
   width: 200px;
   height: 200px;
   bottom: -50px;
   left: -50px;
-  z-index: 0;
+  z-index: 2;
+  pointer-events: none;
 }
 
 body.dark-mode .particle-3 {
   position: fixed;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.25);
   animation: floatBg 20s infinite ease-in-out;
   animation-delay: -10s;
   width: 150px;
   height: 150px;
   top: 50%;
   left: 10%;
-  z-index: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+body.dark-mode .particle-4 {
+  position: fixed;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  animation: floatBg 20s infinite ease-in-out;
+  animation-delay: -15s;
+  width: 100px;
+  height: 100px;
+  bottom: 30%;
+  right: 15%;
+  z-index: 2;
+  pointer-events: none;
+}
+
+body.dark-mode .particle-5 {
+  position: fixed;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  animation: floatBg 20s infinite ease-in-out;
+  animation-delay: -7s;
+  width: 250px;
+  height: 250px;
+  top: 10%;
+  left: 30%;
+  z-index: 2;
+  pointer-events: none;
 }
 
 @keyframes floatBg {
@@ -589,17 +608,17 @@ body.dark-mode .particle-3 {
 }
 
 body.dark-mode .header {
-  background: rgba(21, 21, 43, 0.95);
+  background: rgba(10, 16, 32, 0.95);
 }
 
 body.dark-mode .category-card {
-  background: rgba(28, 35, 55, 0.85); /* plus clair et moins opaque */
-  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 body.dark-mode .depot-card {
-  background: rgba(18, 22, 41, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 body.dark-mode .depot-name,

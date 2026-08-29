@@ -564,6 +564,15 @@ function App(): ReactNode {
   return (
     <div className="app">
       <UpdateNotification />
+      {darkMode && (
+        <>
+          <div className="particle-1"></div>
+          <div className="particle-2"></div>
+          <div className="particle-3"></div>
+          <div className="particle-4"></div>
+          <div className="particle-5"></div>
+        </>
+      )}
       <header className="header">
         <div className="header-content">
           <div className="logo">
