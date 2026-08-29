@@ -147,9 +147,26 @@ function App(): ReactNode {
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && user) {
-        // L'app revient du background, forcer le rechargement des données
-        console.log('App visible again, reloading Firebase data...');
-        loadMoreDepots(0);
+        // L'app revient du background
+        if (navigator.onLine) {
+          // Si en ligne, forcer le rechargement des données
+          console.log('App visible again, reloading Firebase data...');
+          loadMoreDepots(0);
+        } else {
+          // Si hors ligne, afficher le cache
+          console.log('App visible again but offline, showing cache...');
+          const cacheData = loadFromCache();
+          const visibleCachedDepots = (cacheData?.depots || [])
+            .filter((depot: any) => depot && isDepotVisible(depot))
+            .map((depot: any) => ({ ...depot }));
+
+          if (visibleCachedDepots.length > 0) {
+            setDisplayedDepots(visibleCachedDepots);
+            setTotalDepots(visibleCachedDepots.length);
+            setIsCached(true);
+            setIsOnline(false);
+          }
+        }
       }
     };
 
