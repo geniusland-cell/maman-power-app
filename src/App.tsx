@@ -459,7 +459,7 @@ function App(): ReactNode {
 
   const categoryEmoji = (categoryName: string): string => {
     if (categoryName === "Poisson") return "🐟";
-    if (categoryName === "Viande") return "�";
+    if (categoryName === "Viande") return "🥩";
     if (categoryName === "Charbon") return "🪵";
     if (categoryName === "Boissons") return "🍾";
     if (categoryName === "Epiceries/Vivre secs") return "🛒";
@@ -603,7 +603,7 @@ function App(): ReactNode {
               </span>
             )}
             <button className="dark-mode-btn" onClick={toggleDarkMode}>
-              {darkMode ? "S" : "N"}
+              {darkMode ? "🌙" : "☀️"}
             </button>
             <button
               className="qr-btn"

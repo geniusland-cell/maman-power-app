@@ -502,8 +502,90 @@ body {
 }
 
 body.dark-mode {
-  background: linear-gradient(135deg, #009739 0%, #ffdd00 50%, #ce1126 100%);
-  color: #ffffff; /* texte blanc pour contraste maximal */
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(60, 97, 255, 0.18),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      rgba(255, 96, 0, 0.16),
+      transparent 28%
+    ),
+    #080b14;
+  color: #eef2ff;
+}
+
+/* Particle background for dark mode */
+body.dark-mode::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+body.dark-mode::after {
+  content: "";
+  position: fixed;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  animation: floatBg 20s infinite ease-in-out;
+  width: 300px;
+  height: 300px;
+  top: -100px;
+  right: -100px;
+  z-index: 0;
+}
+
+body.dark-mode .particle-2 {
+  position: fixed;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  animation: floatBg 20s infinite ease-in-out;
+  animation-delay: -5s;
+  width: 200px;
+  height: 200px;
+  bottom: -50px;
+  left: -50px;
+  z-index: 0;
+}
+
+body.dark-mode .particle-3 {
+  position: fixed;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  animation: floatBg 20s infinite ease-in-out;
+  animation-delay: -10s;
+  width: 150px;
+  height: 150px;
+  top: 50%;
+  left: 10%;
+  z-index: 0;
+}
+
+@keyframes floatBg {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.3;
+  }
+  25% {
+    transform: translate(50px, -30px) scale(1.1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translate(-30px, 50px) scale(0.9);
+    opacity: 0.2;
+  }
+  75% {
+    transform: translate(20px, -20px) scale(1.05);
+    opacity: 0.4;
+  }
 }
 
 body.dark-mode .header {

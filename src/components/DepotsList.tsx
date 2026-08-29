@@ -62,9 +62,6 @@ export default function DepotsList({
   };
 
   const normalizeCategoryName = (categoryName: string): string => {
-    if (categoryName === "Poisson" || categoryName === "Viande") {
-      return "Poisson & Viande";
-    }
     if (categoryName === "Fruits") {
       return "Fruit et Legume";
     }
@@ -77,7 +74,8 @@ export default function DepotsList({
   const getPlaceholderImage = (category: string): string => {
     const normalized = normalizeCategoryName(category);
     const emojiMap: Record<string, string> = {
-      "Poisson & Viande": "🧊",
+      Poisson: "🐟",
+      Viande: "�",
       Charbon: "🪵",
       Boissons: "🍾",
       "Epiceries/Vivre secs": "🛒",
