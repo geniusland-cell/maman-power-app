@@ -1,6 +1,8 @@
 import { useState, ReactNode } from "react";
 import type { DepotWithProducts } from "../types";
 import { optimizeModalImage, optimizeThumbnail } from "../utils/cloudinary";
+import PrivateGroupCircle from "./PrivateGroupCircle";
+import { hasWhatsAppGroupAccess } from "../services/whatsappGroupService";
 import "./DepotsList.css";
 
 interface DepotsListProps {
@@ -182,6 +184,7 @@ export default function DepotsList({
                         alt="Promo"
                         className="promo-image"
                         onClick={() =>
+                          depot.promo_image_url &&
                           window.open(
                             optimizeModalImage(depot.promo_image_url),
                             "_blank",
@@ -200,6 +203,11 @@ export default function DepotsList({
                     </div>
                   )}
                 </div>
+              )}
+
+              {/* WhatsApp Private Group for Advanced/Elite */}
+              {hasWhatsAppGroupAccess(depot.tier as any) && (
+                <PrivateGroupCircle depotId={depot.id} />
               )}
 
               <div className="depot-actions">
