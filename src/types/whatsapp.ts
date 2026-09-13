@@ -1,6 +1,7 @@
 export type SubscriptionTier = "Basic" | "Pro" | "Advanced" | "Elite";
 
 export interface WhatsAppGroup {
+  id: string; // ID du groupe dans Firebase
   depotId: string;
   lienInvitation: string;
   nombreMembres: number;

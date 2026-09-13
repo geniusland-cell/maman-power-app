@@ -2,7 +2,7 @@ import { useState, useEffect, ReactNode } from "react";
 import { incrementMemberCount } from "../services/whatsappGroupService";
 import type { WhatsAppGroup } from "../types/whatsapp";
 import { db } from "../firebase";
-import { ref, get } from "firebase/database";
+import { ref, get, onValue } from "firebase/database";
 import "./PrivateGroupCircle.css";
 
 interface PrivateGroupCircleProps {
@@ -30,17 +30,20 @@ export default function PrivateGroupCircle({
           if (whatsappGroupId) {
             setGroupId(whatsappGroupId);
             
+            // Use onValue for real-time updates
             const groupRef = ref(db, `whatsappGroups/${whatsappGroupId}`);
-            const groupSnapshot = await get(groupRef);
-            
-            if (groupSnapshot.exists()) {
-              setWhatsappGroup(groupSnapshot.val());
-            }
+            const unsubscribe = onValue(groupRef, (snapshot) => {
+              if (snapshot.exists()) {
+                setWhatsappGroup(snapshot.val());
+              }
+              setLoading(false);
+            });
+
+            return () => unsubscribe();
           }
         }
       } catch (err) {
         console.error("Erreur chargement groupe WhatsApp:", err);
-      } finally {
         setLoading(false);
       }
     };
@@ -57,12 +60,14 @@ export default function PrivateGroupCircle({
     // Ouvrir le lien WhatsApp
     window.open(whatsappGroup.lienInvitation, "_blank");
 
-    // Incrémenter le compteur de membres
-    try {
-      await incrementMemberCount(groupId);
-      setJoined(true);
-    } catch (err) {
-      console.error("Erreur incrémentation membres:", err);
+    // Incrémenter le compteur de membres (une seule fois)
+    if (!joined) {
+      try {
+        await incrementMemberCount(groupId);
+        setJoined(true);
+      } catch (err) {
+        console.error("Erreur incrémentation membres:", err);
+      }
     }
   };
 
@@ -90,9 +95,8 @@ export default function PrivateGroupCircle({
       <button
         className={`join-btn ${joined ? "joined" : ""}`}
         onClick={handleJoinGroup}
-        disabled={joined}
       >
-        {joined ? "Rejoint ✓" : "Rejoindre"}
+        {joined ? "Rejoindre à nouveau" : "Rejoindre"}
       </button>
     </div>
   );
