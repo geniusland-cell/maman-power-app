@@ -80,7 +80,7 @@ export default function PrivateGroupCircle({
 
   return (
     <div className="private-group-circle">
-      <div className="group-icon">📱</div>
+      <div className="group-icon"></div>
       <div className="group-info">
         <span className="group-title">Groupe Privé</span>
         <span className="member-count">

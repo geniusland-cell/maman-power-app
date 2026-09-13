@@ -232,16 +232,19 @@ export default function DepotsList({
                   <span className="action-text">Appeler</span>
                 </button>
 
-                <a
-                  href={`https://wa.me/${(depot.phone_whatsapp || depot.phone || "").replace(/[^\d+]/g, "")}`}
-                  className="action-btn whatsapp-btn"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title="WhatsApp"
-                >
-                  <span className="action-icon"></span>
-                  <span className="action-text">WhatsApp</span>
-                </a>
+                {/* Hide WhatsApp button if depot has private group access */}
+                {!hasWhatsAppGroupAccess(depot.tier as any) && (
+                  <a
+                    href={`https://wa.me/${(depot.phone_whatsapp || depot.phone || "").replace(/[^\d+]/g, "")}`}
+                    className="action-btn whatsapp-btn"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="WhatsApp"
+                  >
+                    <span className="action-icon"></span>
+                    <span className="action-text">WhatsApp</span>
+                  </a>
+                )}
 
                 <button
                   className="action-btn info-btn"

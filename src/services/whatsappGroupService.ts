@@ -143,7 +143,11 @@ export const incrementMemberCount = async (
 export const hasWhatsAppGroupAccess = (
   subscriptionTier: SubscriptionTier | undefined,
 ): boolean => {
-  return subscriptionTier === "Advanced" || subscriptionTier === "Elite";
+  if (!subscriptionTier) return false;
+  // Accept both PascalCase and lowercase for backward compatibility
+  const normalizedTier = 
+    subscriptionTier.charAt(0).toUpperCase() + subscriptionTier.slice(1).toLowerCase();
+  return normalizedTier === "Advanced" || normalizedTier === "Elite";
 };
 
 /**
