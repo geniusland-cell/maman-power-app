@@ -1,4 +1,4 @@
-export type SubscriptionTier = "Standard" | "Basic" | "Advanced" | "Elite";
+export type SubscriptionTier = "Basic" | "Pro" | "Advanced" | "Elite";
 
 export interface WhatsAppGroup {
   depotId: string;

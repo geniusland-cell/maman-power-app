@@ -97,6 +97,11 @@ function App(): ReactNode {
     const notified = localStorage.getItem(`voting_closed_notified_${quarter}`);
     return notified === "true";
   });
+  const [hasVotedThisQuarter, setHasVotedThisQuarter] = useState<boolean>(() => {
+    const quarter = getCurrentQuarter();
+    const voted = localStorage.getItem(`user_voted_${quarter}`);
+    return voted === "true";
+  });
 
   const isVotingUiActive =
     votingStatus.active && votingPhaseStatus === "VOTING_ACTIVE";
@@ -436,6 +441,11 @@ function App(): ReactNode {
       throw new Error(result.error || "Erreur lors du vote");
     }
 
+    // Marquer que l'utilisateur a voté ce trimestre
+    const quarter = getCurrentQuarter();
+    localStorage.setItem(`user_voted_${quarter}`, "true");
+    setHasVotedThisQuarter(true);
+
     // Afficher la modal de soutien après le vote
     setTimeout(() => {
       setShowSoutienModal(true);
@@ -711,6 +721,7 @@ function App(): ReactNode {
             onToggleFavorite={toggleFavorite}
             onVote={handleVote}
             votingEnabled={isVotingUiActive && hasAcceptedVoting}
+            hasVoted={hasVotedThisQuarter}
           />
         )}
 

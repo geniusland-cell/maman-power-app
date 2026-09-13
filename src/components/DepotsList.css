@@ -68,6 +68,34 @@
   flex-shrink: 0;
 }
 
+/* Voting Medals */
+.voting-medal {
+  font-size: 20px;
+  flex-shrink: 0;
+  animation: medalPulse 2s ease-in-out infinite;
+}
+
+.voting-medal.gold {
+  filter: drop-shadow(0 2px 4px rgba(255, 215, 0, 0.6));
+}
+
+.voting-medal.silver {
+  filter: drop-shadow(0 2px 4px rgba(192, 192, 192, 0.6));
+}
+
+.voting-medal.bronze {
+  filter: drop-shadow(0 2px 4px rgba(205, 127, 50, 0.6));
+}
+
+@keyframes medalPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
 /* DEPOT ITEM - BASE STYLE */
 .depot-item {
   background: white;

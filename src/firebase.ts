@@ -219,10 +219,11 @@ export const getCurrentQuarter = (): string => {
  * @returns Nombre pour le tri (0 = priorité max)
  */
 export const getTierPriority = (tier: string | undefined): number => {
-  if (tier === "elite") return 0; // Top 3 absolu
-  if (tier === "advanced") return 1; // Top 10
-  if (tier === "basic") return 2; // Top 3 par distance
-  return 3; // Sans premium
+  if (tier === "Elite") return 0; // Top 3 absolu
+  if (tier === "Advanced") return 1; // Top 10
+  if (tier === "Pro") return 2; // Top 3 par distance
+  if (tier === "Basic") return 3; // Basic
+  return 4; // Sans premium
 };
 
 /**
@@ -854,17 +855,22 @@ export const getDepotsByTierAndCategory = async (
       // Séparer par tier
       const eliteDepots = depots.filter(
         (d) =>
-          d.tier === "elite" &&
+          d.tier === "Elite" &&
           (!d.tier_expiry || new Date(d.tier_expiry) > now),
       );
       const advancedDepots = depots.filter(
         (d) =>
-          d.tier === "advanced" &&
+          d.tier === "Advanced" &&
+          (!d.tier_expiry || new Date(d.tier_expiry) > now),
+      );
+      const proDepots = depots.filter(
+        (d) =>
+          d.tier === "Pro" &&
           (!d.tier_expiry || new Date(d.tier_expiry) > now),
       );
       const basicDepots = depots.filter(
         (d) =>
-          d.tier === "basic" &&
+          d.tier === "Basic" &&
           (!d.tier_expiry || new Date(d.tier_expiry) > now),
       );
 
@@ -872,6 +878,7 @@ export const getDepotsByTierAndCategory = async (
       const result = [
         ...eliteDepots.slice(0, 3), // TOP 3 ELITE
         ...advancedDepots.slice(0, 10), // TOP 10 ADVANCED
+        ...proDepots.slice(0, 15), // TOP 15 PRO
         ...basicDepots.slice(0, 15), // TOP 15 BASIC
       ];
 

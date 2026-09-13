@@ -10,7 +10,7 @@ test("hides depots when subscription expiry is invalid", () => {
     payment_pending: false,
     subscription_status: "active",
     subscription_expiry: "not-a-date",
-    tier: "none",
+    tier: "Basic",
   };
 
   assert.equal(isDepotVisible(depot), false);
@@ -27,7 +27,7 @@ test("keeps active depots visible when the standard subscription is still valid,
     subscription_status: "active",
     subscription_expiry: future,
     tier_expiry: past,
-    tier: "basic",
+    tier: "Basic",
   };
 
   assert.equal(isDepotVisible(depot), true);
@@ -43,7 +43,7 @@ test("keeps active depots visible when expiry dates are valid and in the future"
     subscription_status: "active",
     subscription_expiry: future,
     tier_expiry: future,
-    tier: "basic",
+    tier: "Basic",
   };
 
   assert.equal(isDepotVisible(depot), true);

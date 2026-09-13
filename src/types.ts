@@ -51,10 +51,11 @@ export interface Depot {
   manager_name?: string;
   subscription_status?: "active" | "inactive";
   subscription_expiry?: string; // ISO date (calculated as now + 30 days)
-  // Système de paiement 3-tier
-  tier?: "none" | "basic" | "advanced" | "elite"; // 10k, 15k, 20k, 25k
+  // Système de paiement 4-tiers (nouveaux tarifs)
+  tier?: "Basic" | "Pro" | "Advanced" | "Elite"; // 15k, 25k, 35k, 50-75k
   tier_expiry?: string; // ISO date
   tier_rank?: number; // Position within tier for category
+  whatsappGroupId?: string; // ID du groupe WhatsApp associé
   // Système de vote
   is_top_voted?: boolean; // Top 1 du trimestre
   vote_rank?: number; // Position dans le classement (1, 2, 3...)

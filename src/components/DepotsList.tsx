@@ -11,6 +11,7 @@ interface DepotsListProps {
   onToggleFavorite: (depotId: string) => void;
   onVote?: (depotId: string) => Promise<void>; // Callback pour voter
   votingEnabled?: boolean;
+  hasVoted?: boolean; // Si l'utilisateur a déjà voté ce trimestre
 }
 
 export default function DepotsList({
@@ -19,6 +20,7 @@ export default function DepotsList({
   onToggleFavorite,
   onVote,
   votingEnabled = false,
+  hasVoted = false,
 }: DepotsListProps): ReactNode {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [votingDepotId, setVotingDepotId] = useState<string | null>(null);
@@ -118,9 +120,19 @@ export default function DepotsList({
                 </button>
                 <h3 className="depot-name">{depot.name}</h3>
                 <span className="depot-distance"> {depot.distance} km</span>
-                {(depot.tier === "basic" ||
-                  depot.tier === "advanced" ||
-                  depot.tier === "elite") && (
+                {depot.vote_rank === 1 && (
+                  <span className="voting-medal gold">🥇</span>
+                )}
+                {depot.vote_rank === 2 && (
+                  <span className="voting-medal silver">🥈</span>
+                )}
+                {depot.vote_rank === 3 && (
+                  <span className="voting-medal bronze">🥉</span>
+                )}
+                {(depot.tier === "Basic" ||
+                  depot.tier === "Pro" ||
+                  depot.tier === "Advanced" ||
+                  depot.tier === "Elite") && (
                   <span className="certified-badge">✓ Certifié</span>
                 )}
               </div>
@@ -175,25 +187,22 @@ export default function DepotsList({
               )}
 
               {/* Promo Content for Premium Tiers */}
-              {(depot.tier === "advanced" || depot.tier === "elite") && (
+              {(depot.tier === "Advanced" || depot.tier === "Elite") && (
                 <div className="promo-section">
                   {depot.promo_image_url && (
                     <div className="promo-image-container">
                       <img
-                        src={optimizeThumbnail(depot.promo_image_url)}
+                        src={depot.promo_image_url}
                         alt="Promo"
                         className="promo-image"
                         onClick={() =>
                           depot.promo_image_url &&
-                          window.open(
-                            optimizeModalImage(depot.promo_image_url),
-                            "_blank",
-                          )
+                          window.open(depot.promo_image_url, "_blank")
                         }
                       />
                     </div>
                   )}
-                  {depot.tier === "elite" && depot.promo_video_url && (
+                  {depot.tier === "Elite" && depot.promo_video_url && (
                     <div className="promo-video-container">
                       <iframe
                         src={depot.promo_video_url}
@@ -251,14 +260,16 @@ export default function DepotsList({
                   <button
                     className="action-btn vote-btn"
                     onClick={() => handleVote(depot.id)}
-                    disabled={votingDepotId === depot.id}
-                    title="Voter pour ce dépôt"
+                    disabled={votingDepotId === depot.id || hasVoted}
+                    title={hasVoted ? "Vous avez déjà voté ce trimestre" : "Voter pour ce dépôt"}
                   >
                     <span className="action-icon">
-                      {votingDepotId === depot.id ? "⏳" : " "}
+                      {hasVoted ? "✓" : votingDepotId === depot.id ? "⏳" : " "}
                     </span>
                     <span className="action-text">
-                      {votingDepotId === depot.id
+                      {hasVoted
+                        ? "Déjà voté"
+                        : votingDepotId === depot.id
                         ? "Vote..."
                         : `Vote (${depot.current_votes || 0})`}
                     </span>

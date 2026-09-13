@@ -173,3 +173,37 @@ export const getAllWhatsAppGroups = async (): Promise<
     return { success: false, error: errorMsg };
   }
 };
+
+/**
+ * Récupérer tous les dépôts avec abonnement Advanced ou Elite
+ * Accepte à la fois la nouvelle casse (PascalCase) et l'ancienne casse (lowercase)
+ */
+export const getAdvancedEliteDepots = async (): Promise<
+  FirebaseResponse<any[]>
+> => {
+  try {
+    const depotsRef = ref(db, "depots");
+    const snapshot = await get(depotsRef);
+    
+    if (!snapshot.exists()) {
+      return { success: true, data: [] };
+    }
+    
+    const depotsData = snapshot.val();
+    const advancedEliteDepots = Object.keys(depotsData)
+      .map((key) => ({ id: key, ...depotsData[key] }))
+      .filter(
+        (depot) =>
+          depot.tier === "Advanced" || 
+          depot.tier === "Elite" ||
+          depot.tier === "advanced" || 
+          depot.tier === "elite",
+      );
+    
+    return { success: true, data: advancedEliteDepots };
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : "Erreur inconnue";
+    console.error("Erreur récupération dépôts Advanced/Elite:", errorMsg);
+    return { success: false, error: errorMsg };
+  }
+};
