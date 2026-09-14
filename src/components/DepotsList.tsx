@@ -5,6 +5,14 @@ import PrivateGroupCircle from "./PrivateGroupCircle";
 import { hasWhatsAppGroupAccess } from "../services/whatsappGroupService";
 import "./DepotsList.css";
 
+// Vérifier si un dépôt est certifié (a un abonnement actif)
+const isCertified = (depot: DepotWithProducts): boolean => {
+  if (!depot.tier) return false;
+  const now = new Date();
+  const expiry = depot.tier_expiry ? new Date(depot.tier_expiry) : null;
+  return expiry ? expiry > now : false;
+};
+
 interface DepotsListProps {
   depots: DepotWithProducts[];
   favorites: string[];
@@ -129,10 +137,7 @@ export default function DepotsList({
                 {depot.vote_rank === 3 && (
                   <span className="voting-medal bronze">🥉</span>
                 )}
-                {(depot.tier === "Basic" ||
-                  depot.tier === "Pro" ||
-                  depot.tier === "Advanced" ||
-                  depot.tier === "Elite") && (
+                {isCertified(depot) && (
                   <span className="certified-badge">✓ Certifié</span>
                 )}
               </div>
