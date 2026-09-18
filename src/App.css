@@ -1095,9 +1095,15 @@ body.dark-mode .app-footer {
   color: #aaa;
 }
 
+.footer-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
 .whatsapp-feedback-btn {
   display: inline-block;
-  margin-top: 12px;
   padding: 10px 20px;
   background: linear-gradient(135deg, #25d366, #128c7e);
   color: white;
@@ -1114,8 +1120,31 @@ body.dark-mode .app-footer {
   box-shadow: 0 6px 16px rgba(37, 211, 102, 0.4);
 }
 
+.whatsapp-group-btn {
+  display: inline-block;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #ff9f43, #ff6b6b);
+  color: white;
+  text-decoration: none;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: 13px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(255, 159, 67, 0.3);
+}
+
+.whatsapp-group-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 159, 67, 0.4);
+}
+
 body.dark-mode .whatsapp-feedback-btn {
   background: linear-gradient(135deg, #25d366, #128c7e);
+  color: white;
+}
+
+body.dark-mode .whatsapp-group-btn {
+  background: linear-gradient(135deg, #ff9f43, #ff6b6b);
   color: white;
 }
 

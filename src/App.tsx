@@ -1035,14 +1035,24 @@ function App(): ReactNode {
       {/* Footer */}
       <footer className="app-footer">
         <p>© 2026 | Maman Power Genesis v1.0 | Powered by Vision Unique</p>
-        <a
-          href="https://wa.me/242067678128?text=Bonjour,%20je%20voudrais%20donner%20mon%20avis%20sur%20l'application%20Maman%20Power"
-          className="whatsapp-feedback-btn"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          💬 Donnez votre avis sur WhatsApp
-        </a>
+        <div className="footer-buttons">
+          <a
+            href="https://wa.me/242067678128?text=Bonjour,%20je%20voudrais%20donner%20mon%20avis%20sur%20l'application%20Maman%20Power"
+            className="whatsapp-feedback-btn"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            💬 Donnez votre avis sur WhatsApp
+          </a>
+          <a
+            href="https://chat.whatsapp.com/Bd0uM6c4Iq0HK1pCPE26tf"
+            className="whatsapp-group-btn"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            📢 Rejoindre le groupe d'annonces
+          </a>
+        </div>
       </footer>
 
       {/* Fixed Logo */}
