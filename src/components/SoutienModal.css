@@ -161,12 +161,12 @@
 }
 
 .whatsapp-btn {
-  background: linear-gradient(135deg, #25d366, #128c7e);
+  background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
 }
 
 .whatsapp-btn:hover {
-  background: linear-gradient(135deg, #1ebe57, #075e54);
+  background: linear-gradient(135deg, #764ba2, #667eea);
 }
 
 .later-btn {

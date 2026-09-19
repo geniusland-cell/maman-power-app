@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, ReactNode, useRef } from "react";
+import { Fish, Beef, Logs, Wine, ShoppingBag, Apple } from "lucide-react";
 import {
   listenToCategories,
   listenToDepotsAndProducts,
@@ -467,14 +468,14 @@ function App(): ReactNode {
     return categoryName;
   };
 
-  const categoryEmoji = (categoryName: string): string => {
-    if (categoryName === "Poisson") return "🐟";
-    if (categoryName === "Viande") return "🥩";
-    if (categoryName === "Charbon") return "🪵";
-    if (categoryName === "Boissons") return "🍾";
-    if (categoryName === "Epiceries/Vivre secs") return "🛒";
-    if (categoryName === "Fruit et Legume") return "🍅";
-    return "";
+  const categoryIcon = (categoryName: string): ReactNode => {
+    if (categoryName === "Poisson") return <Fish size={28} />;
+    if (categoryName === "Viande") return <Beef size={28} />;
+    if (categoryName === "Charbon") return <Logs size={28} />;
+    if (categoryName === "Boissons") return <Wine size={28} />;
+    if (categoryName === "Epiceries/Vivre secs") return <ShoppingBag size={28} />;
+    if (categoryName === "Fruit et Legume") return <Apple size={28} />;
+    return null;
   };
 
   const categories = Array.from(
@@ -486,7 +487,7 @@ function App(): ReactNode {
           {
             ...cat,
             name: normalized,
-            emoji: categoryEmoji(normalized),
+            icon: categoryIcon(normalized),
           },
         ];
       }),
@@ -692,7 +693,7 @@ function App(): ReactNode {
               className="category-card"
               onClick={() => showCategory(category.name)}
             >
-              <div className="category-emoji">{category.emoji}</div>
+              <div className="category-icon">{category.icon}</div>
               <div className="category-name">{category.name}</div>
               <div className="category-count">
                 {displayedDepots.filter((d) =>
