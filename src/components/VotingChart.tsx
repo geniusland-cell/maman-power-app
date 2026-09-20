@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { getVotingRankings, getCurrentQuarter } from "../firebase";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList } from "recharts";
-import { Trophy, Medal, Award, MapPin } from "lucide-react";
+import { Trophy, Medal, Award, MapPin, Clock, X, TrendingUp } from "lucide-react";
 import "./VotingChart.css";
 
 interface VotingChartProps {
@@ -77,9 +77,9 @@ const VotingChart = ({ isOpen, onClose }: VotingChartProps) => {
       <div className="voting-chart-modal" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="chart-header">
-          <h1> Évolution des Votes - {quarter}</h1>
+          <h1><TrendingUp size={20} /> Classement des Votes - {quarter}</h1>
           <button className="close-btn" onClick={onClose}>
-            ✕
+            <X size={18} />
           </button>
         </div>
 
@@ -87,7 +87,7 @@ const VotingChart = ({ isOpen, onClose }: VotingChartProps) => {
         <div className="chart-content">
           {loading ? (
             <div className="loading-state">
-              <div className="spinner">⏳</div>
+              <div className="spinner"><Clock size={24} /></div>
               <p>Chargement du graphique...</p>
             </div>
           ) : rankings.length === 0 ? (

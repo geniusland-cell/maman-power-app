@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
+import { Clock, Trophy, X, Lock, Store } from "lucide-react";
 import { getVotingRankings, getCurrentQuarter } from "../firebase";
 import {
   BarChart,
@@ -57,9 +58,9 @@ const VotingStats = ({ isOpen, onClose }) => {
       <div className="voting-stats-modal" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="stats-header">
-          <h1>🏆 Classement des Votes - {quarter}</h1>
+          <h1><Trophy size={20} /> Classement des Votes - {quarter}</h1>
           <button className="close-btn" onClick={onClose}>
-            ✕
+            <X size={18} />
           </button>
         </div>
 
@@ -67,7 +68,7 @@ const VotingStats = ({ isOpen, onClose }) => {
         <div className="stats-content">
           {loading ? (
             <div className="loading-state">
-              <div className="spinner">⏳</div>
+              <div className="spinner"><Clock size={24} /></div>
               <p>Chargement du classement...</p>
             </div>
           ) : rankings.length === 0 ? (
@@ -128,8 +129,8 @@ const VotingStats = ({ isOpen, onClose }) => {
         {/* Footer */}
         <div className="stats-footer">
           <p className="footer-note">
-            🔐 Les résultats sont mis à jour en temps réel | 🏪 Seul le nombre
-            de votes est visible
+            <><Lock size={14} /> Les résultats sont mis à jour en temps réel | <Store size={14} /> Seul le nombre
+            de votes est visible</>
           </p>
         </div>
       </div>

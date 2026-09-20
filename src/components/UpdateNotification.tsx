@@ -1,4 +1,6 @@
 import { useState, useEffect, ReactNode } from "react";
+import { X, TrendingUp } from "lucide-react";
+import "./UpdateNotification.css";
 
 export default function UpdateNotification(): ReactNode {
   const [updateAvailable, setUpdateAvailable] = useState<boolean>(false);
@@ -46,7 +48,7 @@ export default function UpdateNotification(): ReactNode {
           onClick={() => setUpdateAvailable(false)}
           title="Fermer"
         >
-          ✕
+          <X size={16} />
         </button>
       </div>
     </div>

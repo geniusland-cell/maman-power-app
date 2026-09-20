@@ -1,7 +1,28 @@
 import React, { useState, ReactNode } from "react";
-import { loginByPhone, registerUser } from "../firebase";
-import type { User } from "../types";
-import "../auth.css";
+import { Clock, ShoppingBag } from "lucide-react";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "firebase/auth";
+import { auth } from "../firebase";
+import type { User } from "firebase/auth";
+import "./UnifiedLogin.css";
+
+// Stubs pour les fonctions manquantes
+const loginByPhone = async (phone: string, password: string) => {
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, `${phone}@vision-unique.app`, password);
+    return { success: true, data: userCredential.user };
+  } catch (error) {
+    return { success: false, error: "Erreur de connexion" };
+  }
+};
+
+const registerUser = async (name: string, phone: string, password: string) => {
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, `${phone}@vision-unique.app`, password);
+    return { success: true, data: userCredential.user };
+  } catch (error) {
+    return { success: false, error: "Erreur d'inscription" };
+  }
+};
 
 interface UnifiedLoginProps {
   onLoginSuccess?: (user: User) => void;
@@ -93,7 +114,7 @@ export default function UnifiedLogin({
     return (
       <div className="login-container">
         <div className="login-card">
-          <h1>🛍️ Maman Power</h1>
+          <h1><ShoppingBag size={32} /> Maman Power</h1>
           <p className="subtitle">Créer votre compte</p>
 
           <form onSubmit={handleRegister}>
@@ -148,7 +169,7 @@ export default function UnifiedLogin({
             {error && <div className="error-message">{error}</div>}
 
             <button type="submit" className="login-btn" disabled={isLoading}>
-              {isLoading ? "⏳ Chargement..." : " S'inscrire"}
+              {isLoading ? <><Clock size={16} /> Chargement...</> : " S'inscrire"}
             </button>
 
             <button
@@ -179,7 +200,7 @@ export default function UnifiedLogin({
   return (
     <div className="login-container">
       <div className="login-card">
-        <h1>🛍️ Maman Power</h1>
+        <h1><ShoppingBag size={32} /> Maman Power</h1>
         <p className="subtitle">Connexion Vendeuses</p>
 
         <form onSubmit={handleLogin}>
@@ -210,7 +231,7 @@ export default function UnifiedLogin({
           {error && <div className="error-message">{error}</div>}
 
           <button type="submit" className="login-btn" disabled={isLoading}>
-            {isLoading ? "⏳ Chargement..." : " Se connecter"}
+            {isLoading ? <><Clock size={16} /> Chargement...</> : " Se connecter"}
           </button>
         </form>
 

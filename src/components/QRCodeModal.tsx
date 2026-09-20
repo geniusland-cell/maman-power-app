@@ -1,5 +1,6 @@
-import { ReactNode } from "react";
-import { QRCodeSVG } from "qrcode.react";
+import { useState, useEffect, ReactNode } from "react";
+import { X, Smartphone } from "lucide-react";
+import type { DepotWithProducts } from "../types";
 import "./QRCodeModal.css";
 
 interface QRCodeModalProps {
@@ -34,11 +35,11 @@ const QRCodeModal = ({ isOpen, onClose }: QRCodeModalProps): ReactNode => {
     <div className="qr-modal-overlay" onClick={onClose}>
       <div className="qr-modal" onClick={(e) => e.stopPropagation()}>
         <button className="qr-modal-close" onClick={onClose}>
-          ✕
+          <X size={18} />
         </button>
 
         <div className="qr-modal-content">
-          <div className="qr-icon">📱</div>
+          <div className="qr-icon"><Smartphone size={32} /></div>
           <h2>Partager l'application</h2>
           <p className="qr-subtitle">
             Scannez ce code QR pour télécharger l'application

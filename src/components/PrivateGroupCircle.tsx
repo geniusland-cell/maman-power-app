@@ -1,5 +1,6 @@
 import { useState, useEffect, ReactNode } from "react";
 import { incrementMemberCount } from "../services/whatsappGroupService";
+import { Clock } from "lucide-react";
 import type { WhatsAppGroup } from "../types/whatsapp";
 import { db } from "../firebase";
 import { ref, get, onValue } from "firebase/database";
@@ -74,7 +75,7 @@ export default function PrivateGroupCircle({
   if (loading) {
     return (
       <div className="private-group-circle loading">
-        <span className="loading-spinner">⏳</span>
+        <span className="loading-spinner"><Clock size={20} /></span>
       </div>
     );
   }

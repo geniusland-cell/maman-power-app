@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { X, Heart } from "lucide-react";
 import "./SoutienModal.css";
 
 interface SoutienModalProps {
@@ -34,15 +35,15 @@ const SoutienModal = ({ isOpen, onClose }: SoutienModalProps): ReactNode => {
     <div className="soutien-modal-overlay" onClick={onClose}>
       <div className="soutien-modal" onClick={(e) => e.stopPropagation()}>
         <button className="soutien-modal-close" onClick={onClose}>
-          ✕
+          <X size={18} />
         </button>
 
         <div className="soutien-modal-content">
-          <div className="soutien-icon">✅</div>
+          <div className="soutien-icon"><Heart size={32} /></div>
           <h2>Vote enregistré avec succès !</h2>
 
           <div className="soutien-section">
-            <h3>💙 COLLECTE DE SOUTIEN TRIMESTRIELLE</h3>
+            <h3><Heart size={16} /> COLLECTE DE SOUTIEN TRIMESTRIELLE</h3>
             <p>
               Maman Power est une application gratuite conçue par de jeunes
               développeurs locaux.

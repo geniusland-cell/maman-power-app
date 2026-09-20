@@ -1,5 +1,5 @@
 import { useState, ReactNode } from "react";
-import { Heart, Package, Fish, Beef, Logs, Wine, ShoppingBag, Apple, Medal, Award, Trophy } from "lucide-react";
+import { Heart, Package, Fish, Beef, Logs, Wine, ShoppingBag, Apple, Medal, Award, Trophy, Clock, Check, X } from "lucide-react";
 import type { DepotWithProducts } from "../types";
 import { optimizeModalImage, optimizeThumbnail } from "../utils/cloudinary";
 import PrivateGroupCircle from "./PrivateGroupCircle";
@@ -275,7 +275,7 @@ export default function DepotsList({
                     title={hasVoted ? "Vous avez déjà voté ce trimestre" : "Voter pour ce dépôt"}
                   >
                     <span className="action-icon">
-                      {hasVoted ? "✓" : votingDepotId === depot.id ? "⏳" : " "}
+                      {hasVoted ? <Check size={16} /> : votingDepotId === depot.id ? <Clock size={16} /> : " "}
                     </span>
                     <span className="action-text">
                       {hasVoted
@@ -300,7 +300,7 @@ export default function DepotsList({
             onClick={(e) => e.stopPropagation()}
           >
             <button className="image-modal-close" onClick={closeImageModal}>
-              ✕
+              <X size={18} />
             </button>
             <img
               src={optimizeModalImage(selectedImage)}

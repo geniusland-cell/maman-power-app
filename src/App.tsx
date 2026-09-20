@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, ReactNode, useRef } from "react";
-import { Fish, Beef, Logs, Wine, ShoppingBag, Apple, MessageCircle, Bell, Moon, Sun } from "lucide-react";
+import { Fish, Beef, Logs, Wine, ShoppingBag, Apple, MessageCircle, Bell, Moon, Sun, Clock, X } from "lucide-react";
 import {
   listenToCategories,
   listenToDepotsAndProducts,
@@ -213,7 +213,7 @@ function App(): ReactNode {
         setShowVotingGuidelines(false);
         // Ne montrer la notification qu'une seule fois par trimestre
         if (!votingClosedNotified) {
-          setNotification("🚫 Les votes sont terminés pour ce trimestre");
+          setNotification("Les votes sont terminés pour ce trimestre");
           const quarter = getCurrentQuarter();
           localStorage.setItem(`voting_closed_notified_${quarter}`, "true");
           setVotingClosedNotified(true);
@@ -539,7 +539,7 @@ function App(): ReactNode {
                   animation: "spin 1s linear infinite",
                 }}
               >
-                ⏳
+                <Clock size={24} />
               </div>
               <h2 style={{ marginBottom: "10px", color: "#009739" }}>
                 Restauration de votre session...
@@ -736,7 +736,7 @@ function App(): ReactNode {
             >
               {isLoadingMore ? (
                 <>
-                  <span className="spinner">⏳</span> Chargement...
+                  <span className="spinner"><Clock size={16} /></span> Chargement...
                 </>
               ) : (
                 <>
@@ -790,7 +790,7 @@ function App(): ReactNode {
                 className="help-modal-close"
                 onClick={() => setShowHelpModal(false)}
               >
-                ✕
+                <X size={18} />
               </button>
             </div>
             <div className="help-modal-body">
@@ -982,7 +982,7 @@ function App(): ReactNode {
                 className="help-modal-close"
                 onClick={() => setShowTermsModal(false)}
               >
-                ✕
+                <X size={18} />
               </button>
             </div>
             <div className="help-modal-body">

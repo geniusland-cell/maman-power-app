@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect, ReactNode } from "react";
+import { Check } from "lucide-react";
 import "./VotingGuidelinesModal.css";
 
 interface VotingGuidelinesModalProps {
@@ -68,20 +69,20 @@ const VotingGuidelinesModal = ({
             <p>Votez pour le dépôt qui excelle dans :</p>
             <ul className="criteria-list">
               <li>
-                ✅ <strong>Qualité des produits</strong> - Fraîcheur et
+                <Check size={16} /> <strong>Qualité des produits</strong> - Fraîcheur et
                 sélection
               </li>
               <li>
-                ✅ <strong>Rapidité du service</strong> - Efficacité du comptoir
+                <Check size={16} /> <strong>Rapidité du service</strong> - Efficacité du comptoir
               </li>
               <li>
-                ✅ <strong>Prix compétitifs</strong> - Bon rapport qualité/prix
+                <Check size={16} /> <strong>Prix compétitifs</strong> - Bon rapport qualité/prix
               </li>
               <li>
-                ✅ <strong>Disponibilité</strong> - Stock régulier et varié
+                <Check size={16} /> <strong>Disponibilité</strong> - Stock régulier et varié
               </li>
               <li>
-                ✅ <strong>Professionnalisme</strong> - Courtoisie de l'équipe
+                <Check size={16} /> <strong>Professionnalisme</strong> - Courtoisie de l'équipe
               </li>
             </ul>
           </section>
