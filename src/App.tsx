@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, ReactNode, useRef } from "react";
-import { Fish, Beef, Logs, Wine, ShoppingBag, Apple } from "lucide-react";
+import { Fish, Beef, Logs, Wine, ShoppingBag, Apple, MessageCircle, Bell, Moon, Sun } from "lucide-react";
 import {
   listenToCategories,
   listenToDepotsAndProducts,
@@ -623,7 +623,7 @@ function App(): ReactNode {
               </span>
             )}
             <button className="dark-mode-btn" onClick={toggleDarkMode}>
-              {darkMode ? "🌙" : "☀️"}
+              {darkMode ? <Moon size={18} /> : <Sun size={18} />}
             </button>
             <button
               className="qr-btn"
@@ -1043,7 +1043,7 @@ function App(): ReactNode {
             target="_blank"
             rel="noopener noreferrer"
           >
-            💬 Donnez votre avis sur WhatsApp
+            <MessageCircle size={16} /> Donnez votre avis sur WhatsApp
           </a>
           <a
             href="https://chat.whatsapp.com/Bd0uM6c4Iq0HK1pCPE26tf"
@@ -1051,7 +1051,7 @@ function App(): ReactNode {
             target="_blank"
             rel="noopener noreferrer"
           >
-            📢 Rejoindre le groupe d'annonces
+            <Bell size={16} /> Rejoindre le groupe d'annonces
           </a>
         </div>
       </footer>

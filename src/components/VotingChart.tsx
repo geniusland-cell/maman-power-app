@@ -1,17 +1,7 @@
 import { useEffect, useState } from "react";
 import { getVotingRankings, getCurrentQuarter } from "../firebase";
-import { ref, onValue, get } from "firebase/database";
-import { db } from "../firebase";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  LabelList,
-} from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList } from "recharts";
+import { Trophy, Medal, Award, MapPin } from "lucide-react";
 import "./VotingChart.css";
 
 interface VotingChartProps {
@@ -201,19 +191,19 @@ const VotingChart = ({ isOpen, onClose }: VotingChartProps) => {
                 <h2>Classement Complet</h2>
                 {rankings.map((depot, index) => {
                   const percentage = (depot.vote_count / yAxisMax) * 100;
-                  const medalEmoji =
+                  const medalIcon =
                     index === 0
-                      ? "🥇"
+                      ? <Trophy size={24} className="medal gold" />
                       : index === 1
-                        ? "🥈"
+                        ? <Medal size={24} className="medal silver" />
                         : index === 2
-                          ? "🥉"
-                          : "📍";
+                          ? <Award size={24} className="medal bronze" />
+                          : <MapPin size={20} className="medal" />;
 
                   return (
                     <div key={depot.depotId} className="ranking-item">
                       <div className="ranking-position">
-                        <span className="medal">{medalEmoji}</span>
+                        {medalIcon}
                         <span className="position">#{index + 1}</span>
                       </div>
 

@@ -1,4 +1,5 @@
 import { useState, ReactNode } from "react";
+import { Heart, Package, Fish, Beef, Logs, Wine, ShoppingBag, Apple, Medal, Award, Trophy } from "lucide-react";
 import type { DepotWithProducts } from "../types";
 import { optimizeModalImage, optimizeThumbnail } from "../utils/cloudinary";
 import PrivateGroupCircle from "./PrivateGroupCircle";
@@ -83,17 +84,15 @@ export default function DepotsList({
     return categoryName;
   };
 
-  const getPlaceholderImage = (category: string): string => {
+  const getCategoryIcon = (category: string): ReactNode => {
     const normalized = normalizeCategoryName(category);
-    const emojiMap: Record<string, string> = {
-      Poisson: "🐟",
-      Viande: "�",
-      Charbon: "🪵",
-      Boissons: "🍾",
-      "Epiceries/Vivre secs": "🛒",
-      "Fruit et Legume": "🍅",
-    };
-    return emojiMap[normalized] || "📦";
+    if (normalized === "Poisson") return <Fish size={40} />;
+    if (normalized === "Viande") return <Beef size={40} />;
+    if (normalized === "Charbon") return <Logs size={40} />;
+    if (normalized === "Boissons") return <Wine size={40} />;
+    if (normalized === "Epiceries/Vivre secs") return <ShoppingBag size={40} />;
+    if (normalized === "Fruit et Legume") return <Apple size={40} />;
+    return <Package size={40} />;
   };
 
   if (!depots || depots.length === 0) {
@@ -124,18 +123,22 @@ export default function DepotsList({
                       : "Ajouter aux favoris"
                   }
                 >
-                  {favorites.includes(depot.id) ? "❤️" : "🤍"}
+                  <Heart 
+                    size={20} 
+                    fill={favorites.includes(depot.id) ? "currentColor" : "none"} 
+                    color={favorites.includes(depot.id) ? "#e74c3c" : "#ccc"}
+                  />
                 </button>
                 <h3 className="depot-name">{depot.name}</h3>
                 <span className="depot-distance"> {depot.distance} km</span>
                 {depot.vote_rank === 1 && (
-                  <span className="voting-medal gold">🥇</span>
+                  <Trophy size={20} className="voting-medal gold" />
                 )}
                 {depot.vote_rank === 2 && (
-                  <span className="voting-medal silver">🥈</span>
+                  <Medal size={20} className="voting-medal silver" />
                 )}
                 {depot.vote_rank === 3 && (
-                  <span className="voting-medal bronze">🥉</span>
+                  <Award size={20} className="voting-medal bronze" />
                 )}
                 {isCertified(depot) && (
                   <span className="certified-badge">✓ Certifié</span>
@@ -167,12 +170,12 @@ export default function DepotsList({
                             className="product-thumb-placeholder"
                             onClick={() =>
                               openImageModal(
-                                `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='50' y='55' font-size='60' text-anchor='middle'%3E${getPlaceholderImage(product.category)}%3C/text%3E%3C/svg%3E`,
+                                `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='50' y='55' font-size='60' text-anchor='middle'%3E📦%3C/text%3E%3C/svg%3E`,
                               )
                             }
                             title="Aucune image disponible"
                           >
-                            {getPlaceholderImage(product.category)}
+                            {getCategoryIcon(product.category)}
                           </div>
                         )}
                       </div>
