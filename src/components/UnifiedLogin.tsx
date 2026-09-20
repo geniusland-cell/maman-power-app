@@ -1,6 +1,6 @@
 import React, { useState, ReactNode } from "react";
 import { Clock, ShoppingBag } from "lucide-react";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
 import type { User } from "firebase/auth";
 import "./UnifiedLogin.css";
@@ -8,19 +8,55 @@ import "./UnifiedLogin.css";
 // Stubs pour les fonctions manquantes
 const loginByPhone = async (phone: string, password: string) => {
   try {
-    const userCredential = await signInWithEmailAndPassword(auth, `${phone}@vision-unique.app`, password);
+    // Générer l'email comme dans firebase.ts: vendor + numéro nettoyé + @maman-power.app
+    let cleanPhone = phone.replace(/[^\d]/g, "");
+    if (!cleanPhone.startsWith("242")) {
+      cleanPhone = "242" + cleanPhone;
+    }
+    const email = `vendor${cleanPhone}@maman-power.app`;
+    
+    console.log(`Trying login with email: ${email}`);
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    console.log(`Login successful with email: ${email}`);
     return { success: true, data: userCredential.user };
-  } catch (error) {
-    return { success: false, error: "Erreur de connexion" };
+  } catch (error: any) {
+    console.error("Login error:", error);
+    let errorMessage = "Erreur de connexion";
+    if (error.code === 'auth/invalid-credential') {
+      errorMessage = "Numéro ou mot de passe incorrect";
+    } else if (error.code === 'auth/user-not-found') {
+      errorMessage = "Compte non trouvé";
+    } else if (error.code === 'auth/wrong-password') {
+      errorMessage = "Mot de passe incorrect";
+    } else if (error.code === 'auth/invalid-email') {
+      errorMessage = "Numéro de téléphone invalide";
+    }
+    return { success: false, error: errorMessage };
   }
 };
 
-const registerUser = async (name: string, phone: string, password: string) => {
+const registerUser = async (phone: string, password: string) => {
   try {
-    const userCredential = await createUserWithEmailAndPassword(auth, `${phone}@vision-unique.app`, password);
+    // Générer l'email comme dans firebase.ts: vendor + numéro nettoyé + @maman-power.app
+    let cleanPhone = phone.replace(/[^\d]/g, "");
+    if (!cleanPhone.startsWith("242")) {
+      cleanPhone = "242" + cleanPhone;
+    }
+    const email = `vendor${cleanPhone}@maman-power.app`;
+    
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     return { success: true, data: userCredential.user };
-  } catch (error) {
-    return { success: false, error: "Erreur d'inscription" };
+  } catch (error: any) {
+    console.error("Register error:", error);
+    let errorMessage = "Erreur d'inscription";
+    if (error.code === 'auth/email-already-in-use') {
+      errorMessage = "Ce numéro est déjà utilisé";
+    } else if (error.code === 'auth/weak-password') {
+      errorMessage = "Le mot de passe doit contenir au moins 6 caractères";
+    } else if (error.code === 'auth/invalid-email') {
+      errorMessage = "Numéro de téléphone invalide";
+    }
+    return { success: false, error: errorMessage };
   }
 };
 
@@ -90,7 +126,7 @@ export default function UnifiedLogin({
         return;
       }
 
-      const registerResult = await registerUser(name, phone, password);
+      const registerResult = await registerUser(phone, password);
 
       if (registerResult.success) {
         const loginResult = await loginByPhone(phone, password);
