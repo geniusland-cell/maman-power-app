@@ -23,6 +23,7 @@ import VotingGuidelinesModal from "./components/VotingGuidelinesModal";
 import VotingChart from "./components/VotingChart";
 import SoutienModal from "./components/SoutienModal";
 import QRCodeModal from "./components/QRCodeModal";
+import PWAInstallPrompt from "./components/PWAInstallPrompt";
 import type { Category, DepotWithProducts } from "./types";
 import "./auth.css";
 import "./App.css";
@@ -68,6 +69,7 @@ function App(): ReactNode {
 
   const [showVotingGuidelines, setShowVotingGuidelines] =
     useState<boolean>(false);
+  const [showPWAInstall, setShowPWAInstall] = useState<boolean>(false);
   const [votingStatus, setVotingStatus] = useState<{
     active: boolean;
     daysLeft: number;
@@ -565,6 +567,8 @@ function App(): ReactNode {
       <div className="app">
         <UnifiedLogin
           onLoginSuccess={() => {
+            // Afficher le prompt d'installation PWA après connexion réussie
+            setTimeout(() => setShowPWAInstall(true), 2000);
             window.location.reload();
           }}
         />
@@ -575,6 +579,9 @@ function App(): ReactNode {
   return (
     <div className="app">
       <UpdateNotification />
+      {showPWAInstall && (
+        <PWAInstallPrompt onClose={() => setShowPWAInstall(false)} />
+      )}
       {darkMode && (
         <>
           <div className="particle-1"></div>
