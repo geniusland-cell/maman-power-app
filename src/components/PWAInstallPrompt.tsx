@@ -99,16 +99,14 @@ const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({ onClose }) => {
               <Download size={32} />
             </div>
             <h3>Installer l'application</h3>
-            <p>Ajoutez Maman Power à votre écran d'accueil pour un accès rapide</p>
-            {showFallbackMessage ? (
-              <p className="pwa-fallback-message">
-                Pour installer, utilisez le menu de votre navigateur Chrome (⋮) → "Installer l'application" ou "Ajouter à l'écran d'accueil"
-              </p>
-            ) : (
-              <button className="pwa-install-button" onClick={handleInstallClick}>
-                Installer
-              </button>
-            )}
+            <p>Pour installer sur Android:</p>
+            <ol className="pwa-install-steps">
+              <li>Ouvrez le menu de Chrome (⋮) en haut à droite</li>
+              <li>Touchez <strong>"Installer l'application"</strong> ou <strong>"Ajouter à l'écran d'accueil"</strong></li>
+            </ol>
+            <button className="pwa-install-button" onClick={onClose}>
+              Compris
+            </button>
           </>
         ) : isIOS ? (
           <>
