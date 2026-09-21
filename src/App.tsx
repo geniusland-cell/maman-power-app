@@ -569,7 +569,6 @@ function App(): ReactNode {
           onLoginSuccess={() => {
             // Afficher le prompt d'installation PWA après connexion réussie
             setTimeout(() => setShowPWAInstall(true), 2000);
-            window.location.reload();
           }}
         />
       </div>

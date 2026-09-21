@@ -25,28 +25,45 @@ const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({ onClose }) => {
     setIsAndroid(isAndroidDevice);
     setIsStandalone(isStandaloneMode);
 
+    console.log('PWA Install Debug:', { isIOSDevice, isAndroidDevice, isStandaloneMode });
+
     // Ne pas afficher si déjà installé
     if (isStandaloneMode) {
+      console.log('PWA: Already installed in standalone mode');
       return;
     }
 
-    // Android: écouter l'événement beforeinstallprompt
+    // Android: afficher après un délai (beforeinstallprompt ne fonctionne pas en dev tools)
     if (isAndroidDevice) {
       const handleBeforeInstallPrompt = (e: Event) => {
         e.preventDefault();
         setDeferredPrompt(e);
-        // Afficher après un délai pour ne pas être intrusif
-        setTimeout(() => setShowPrompt(true), 3000);
+        console.log('PWA: beforeinstallprompt event received');
       };
 
       window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+      // Afficher le prompt même sans l'événement (pour dev tools et vrais appareils)
+      setTimeout(() => {
+        console.log('PWA: Showing prompt for Android');
+        setShowPrompt(true);
+      }, 3000);
 
       return () => {
         window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       };
     } else if (isIOSDevice) {
       // iOS: afficher après un délai
-      setTimeout(() => setShowPrompt(true), 5000);
+      setTimeout(() => {
+        console.log('PWA: Showing prompt for iOS');
+        setShowPrompt(true);
+      }, 5000);
+    } else {
+      // Desktop: afficher après un délai plus long
+      setTimeout(() => {
+        console.log('PWA: Showing prompt for Desktop');
+        setShowPrompt(true);
+      }, 7000);
     }
   }, []);
 
