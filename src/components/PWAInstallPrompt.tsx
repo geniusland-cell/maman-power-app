@@ -7,12 +7,10 @@ interface PWAInstallPromptProps {
 }
 
 const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({ onClose }) => {
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showPrompt, setShowPrompt] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [isAndroid, setIsAndroid] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
-  const [showFallbackMessage, setShowFallbackMessage] = useState(false);
 
   useEffect(() => {
     // Détecter l'OS
@@ -34,25 +32,12 @@ const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({ onClose }) => {
       return;
     }
 
-    // Android: afficher après un délai (beforeinstallprompt ne fonctionne pas en dev tools)
+    // Android: afficher après un délai
     if (isAndroidDevice) {
-      const handleBeforeInstallPrompt = (e: Event) => {
-        e.preventDefault();
-        setDeferredPrompt(e);
-        console.log('PWA: beforeinstallprompt event received');
-      };
-
-      window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-      // Afficher le prompt même sans l'événement (pour dev tools et vrais appareils)
       setTimeout(() => {
         console.log('PWA: Showing prompt for Android');
         setShowPrompt(true);
       }, 3000);
-
-      return () => {
-        window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      };
     } else if (isIOSDevice) {
       // iOS: afficher après un délai
       setTimeout(() => {
@@ -67,20 +52,6 @@ const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({ onClose }) => {
       }, 7000);
     }
   }, []);
-
-  const handleInstallClick = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        setShowPrompt(false);
-      }
-      setDeferredPrompt(null);
-    } else {
-      // Afficher un message inline si l'événement n'est pas disponible
-      setShowFallbackMessage(true);
-    }
-  };
 
   if (!showPrompt || isStandalone) {
     return null;
