@@ -12,6 +12,7 @@ const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({ onClose }) => {
   const [isIOS, setIsIOS] = useState(false);
   const [isAndroid, setIsAndroid] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
+  const [showFallbackMessage, setShowFallbackMessage] = useState(false);
 
   useEffect(() => {
     // Détecter l'OS
@@ -75,6 +76,9 @@ const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({ onClose }) => {
         setShowPrompt(false);
       }
       setDeferredPrompt(null);
+    } else {
+      // Afficher un message inline si l'événement n'est pas disponible
+      setShowFallbackMessage(true);
     }
   };
 
@@ -96,9 +100,15 @@ const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({ onClose }) => {
             </div>
             <h3>Installer l'application</h3>
             <p>Ajoutez Maman Power à votre écran d'accueil pour un accès rapide</p>
-            <button className="pwa-install-button" onClick={handleInstallClick}>
-              Installer
-            </button>
+            {showFallbackMessage ? (
+              <p className="pwa-fallback-message">
+                Pour installer, utilisez le menu de votre navigateur Chrome (⋮) → "Installer l'application" ou "Ajouter à l'écran d'accueil"
+              </p>
+            ) : (
+              <button className="pwa-install-button" onClick={handleInstallClick}>
+                Installer
+              </button>
+            )}
           </>
         ) : isIOS ? (
           <>

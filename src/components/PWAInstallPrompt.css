@@ -113,6 +113,16 @@
   transform: translateY(0);
 }
 
+.pwa-fallback-message {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+  margin-top: 10px;
+}
+
 /* Dark mode support */
 .dark-mode .pwa-install-content {
   background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
