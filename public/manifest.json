@@ -1,43 +1,29 @@
 {
-  "name": "MAMAN POWER - Marché-Connect Vendeuses",
+  "name": "MAMAN POWER",
   "short_name": "MAMAN POWER",
-  "description": "Application mobile pour les vendeuses MAMAN POWER - Trouvez et contactez les dépôts près de vous",
+  "description": "Application pour les vendeuses MAMAN POWER",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#009739",
   "orientation": "portrait-primary",
-  "version": "1789900048991",
   "icons": [
     {
-      "src": "/favicon.svg",
+      "src": "/pwa-192x192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/favicon.svg",
+      "src": "/pwa-512x512.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any"
-    },
-    {
-      "src": "/favicon.svg",
-      "sizes": "192x192",
-      "type": "image/svg+xml",
-      "purpose": "maskable"
     }
   ],
   "categories": [
     "shopping",
     "business",
     "productivity"
-  ],
-  "screenshots": [
-    {
-      "src": "/favicon.svg",
-      "sizes": "540x720",
-      "type": "image/svg+xml"
-    }
   ]
 }
