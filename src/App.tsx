@@ -1039,11 +1039,6 @@ function App(): ReactNode {
         </div>
       )}
 
-      {/* Footer */}
-      <footer className="app-footer">
-        <p> 2026 | Maman Power Genesis v1.0 | Powered by Vision Unique</p>
-      </footer>
-
       {/* Footer Buttons - Outside footer */}
       <div className="footer-buttons">
         <a
@@ -1063,6 +1058,11 @@ function App(): ReactNode {
           <Bell size={16} /> Rejoindre le groupe d'annonces
         </a>
       </div>
+
+      {/* Footer */}
+      <footer className="app-footer">
+        <p>&copy; 2026 | Maman Power Genesis v1.0 | Powered by Vision Unique</p>
+      </footer>
 
       {/* Fixed Logo */}
       <a
