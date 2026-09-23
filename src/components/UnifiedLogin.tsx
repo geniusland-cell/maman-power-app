@@ -1,64 +1,8 @@
 import React, { useState, ReactNode } from "react";
 import { Clock, ShoppingBag } from "lucide-react";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../firebase";
-import type { User } from "firebase/auth";
+import { loginByPhone, registerUser } from "../firebase";
+import type { User } from "../types";
 import "./UnifiedLogin.css";
-
-// Stubs pour les fonctions manquantes
-const loginByPhone = async (phone: string, password: string) => {
-  try {
-    // Générer l'email comme dans firebase.ts: vendor + numéro nettoyé + @maman-power.app
-    let cleanPhone = phone.replace(/[^\d]/g, "");
-    if (!cleanPhone.startsWith("242")) {
-      cleanPhone = "242" + cleanPhone;
-    }
-    const email = `vendor${cleanPhone}@maman-power.app`;
-    
-    console.log(`Trying login with email: ${email}`);
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    console.log(`Login successful with email: ${email}`);
-    return { success: true, data: userCredential.user };
-  } catch (error: any) {
-    console.error("Login error:", error);
-    let errorMessage = "Erreur de connexion";
-    if (error.code === 'auth/invalid-credential') {
-      errorMessage = "Numéro ou mot de passe incorrect";
-    } else if (error.code === 'auth/user-not-found') {
-      errorMessage = "Compte non trouvé";
-    } else if (error.code === 'auth/wrong-password') {
-      errorMessage = "Mot de passe incorrect";
-    } else if (error.code === 'auth/invalid-email') {
-      errorMessage = "Numéro de téléphone invalide";
-    }
-    return { success: false, error: errorMessage };
-  }
-};
-
-const registerUser = async (phone: string, password: string) => {
-  try {
-    // Générer l'email comme dans firebase.ts: vendor + numéro nettoyé + @maman-power.app
-    let cleanPhone = phone.replace(/[^\d]/g, "");
-    if (!cleanPhone.startsWith("242")) {
-      cleanPhone = "242" + cleanPhone;
-    }
-    const email = `vendor${cleanPhone}@maman-power.app`;
-    
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    return { success: true, data: userCredential.user };
-  } catch (error: any) {
-    console.error("Register error:", error);
-    let errorMessage = "Erreur d'inscription";
-    if (error.code === 'auth/email-already-in-use') {
-      errorMessage = "Ce numéro est déjà utilisé";
-    } else if (error.code === 'auth/weak-password') {
-      errorMessage = "Le mot de passe doit contenir au moins 6 caractères";
-    } else if (error.code === 'auth/invalid-email') {
-      errorMessage = "Numéro de téléphone invalide";
-    }
-    return { success: false, error: errorMessage };
-  }
-};
 
 interface UnifiedLoginProps {
   onLoginSuccess?: (user: User) => void;
@@ -70,7 +14,6 @@ export default function UnifiedLogin({
   const [phone, setPhone] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [name, setName] = useState<string>("");
-  const [email, setEmail] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [isRegistering, setIsRegistering] = useState<boolean>(false);
@@ -114,19 +57,13 @@ export default function UnifiedLogin({
         return;
       }
 
-      if (!email.trim()) {
-        setError("L'email est requis");
-        setIsLoading(false);
-        return;
-      }
-
       if (!phone.trim()) {
         setError("Le téléphone est requis");
         setIsLoading(false);
         return;
       }
 
-      const registerResult = await registerUser(phone, password);
+      const registerResult = await registerUser(name, phone, password);
 
       if (registerResult.success) {
         const loginResult = await loginByPhone(phone, password);
@@ -166,17 +103,6 @@ export default function UnifiedLogin({
               />
             </div>
 
-            <div className="form-group">
-              <label> Adresse Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="vous@example.com"
-                required
-                disabled={isLoading}
-              />
-            </div>
 
             <div className="form-group">
               <label> Numéro WhatsApp</label>
@@ -214,7 +140,6 @@ export default function UnifiedLogin({
               onClick={() => {
                 setIsRegistering(false);
                 setName("");
-                setEmail("");
                 setPhone("");
                 setPassword("");
                 setError("");
