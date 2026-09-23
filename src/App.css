@@ -1091,7 +1091,8 @@ body.dark-mode .app-footer {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-top: 12px;
+  margin: 20px 15px;
+  text-align: center;
 }
 
 .whatsapp-feedback-btn {
