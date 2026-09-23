@@ -1041,7 +1041,6 @@ function App(): ReactNode {
 
       {/* Footer */}
       <footer className="app-footer">
-        <p>© 2026 | Maman Power Genesis v1.0 | Powered by Vision Unique</p>
         <div className="footer-buttons">
           <a
             href="https://wa.me/242067678128?text=Bonjour,%20je%20voudrais%20donner%20mon%20avis%20sur%20l'application%20Maman%20Power"
@@ -1060,6 +1059,7 @@ function App(): ReactNode {
             <Bell size={16} /> Rejoindre le groupe d'annonces
           </a>
         </div>
+        <p>© 2026 | Maman Power Genesis v1.0 | Powered by Vision Unique</p>
       </footer>
 
       {/* Fixed Logo */}
