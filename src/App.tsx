@@ -455,9 +455,9 @@ function App(): ReactNode {
     }, 500);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     clearCache();
-    logout();
+    await logout();
   };
 
   const normalizeCategoryName = (categoryName: string): string => {
