@@ -6,10 +6,12 @@ import "./UnifiedLogin.css";
 
 interface UnifiedLoginProps {
   onLoginSuccess?: (user: User) => void;
+  login?: (phone: string, password: string) => Promise<any>;
 }
 
 export default function UnifiedLogin({
   onLoginSuccess,
+  login,
 }: UnifiedLoginProps): ReactNode {
   const [phone, setPhone] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -66,6 +68,10 @@ export default function UnifiedLogin({
       const registerResult = await registerUser(name, phone, password);
 
       if (registerResult.success) {
+        // Appeler login pour mettre à jour le state utilisateur
+        if (login) {
+          await login(phone, password);
+        }
         onLoginSuccess?.(registerResult.data!);
         return;
       }

@@ -566,13 +566,10 @@ function App(): ReactNode {
     return (
       <div className="app">
         <UnifiedLogin
-          onLoginSuccess={async (userData) => {
-            // Mettre à jour le localStorage pour que onAuthStateChanged le détecte
-            if (userData) {
-              localStorage.setItem("user", JSON.stringify(userData));
-              // Afficher le prompt d'installation PWA après connexion réussie
-              setTimeout(() => setShowPWAInstall(true), 2000);
-            }
+          login={login}
+          onLoginSuccess={() => {
+            // Afficher le prompt d'installation PWA après connexion réussie
+            setTimeout(() => setShowPWAInstall(true), 2000);
           }}
         />
       </div>
