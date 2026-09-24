@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, ReactNode, useRef } from "react";
 import { Fish, Beef, Logs, Wine, ShoppingBag, Apple, MessageCircle, Bell, Moon, Sun, Clock, X } from "lucide-react";
+import { Analytics } from "@vercel/analytics/react";
 import {
   listenToCategories,
   listenToDepotsAndProducts,
@@ -1082,6 +1083,9 @@ function App(): ReactNode {
       >
         <img src="/photo-pro.jpg" alt="Vision Unique Logo" />
       </a>
+
+      {/* Vercel Analytics */}
+      <Analytics />
 
       {/* Soutien Modal */}
       <SoutienModal
