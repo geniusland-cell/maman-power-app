@@ -625,9 +625,16 @@ function App(): ReactNode {
                 </button>
               </>
             ) : (
-              <span style={{ color: "#999", fontSize: "14px" }}>
-                Mode hors ligne
-              </span>
+              <>
+                <span style={{ color: "#999", fontSize: "14px" }}>
+                  Mode hors ligne
+                </span>
+                {isCached && (
+                  <button className="logout-btn" onClick={handleLogout}>
+                    Déconnexion
+                  </button>
+                )}
+              </>
             )}
             <button className="dark-mode-btn" onClick={toggleDarkMode}>
               {darkMode ? <Moon size={18} /> : <Sun size={18} />}
