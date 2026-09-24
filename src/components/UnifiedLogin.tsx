@@ -66,10 +66,7 @@ export default function UnifiedLogin({
       const registerResult = await registerUser(name, phone, password);
 
       if (registerResult.success) {
-        const loginResult = await loginByPhone(phone, password);
-        if (loginResult.success && loginResult.data) {
-          onLoginSuccess?.(loginResult.data);
-        }
+        onLoginSuccess?.(registerResult.data!);
         return;
       }
 

@@ -29,7 +29,7 @@ import "./auth.css";
 import "./App.css";
 
 function App(): ReactNode {
-  const { user, loading, logout } = useAuth();
+  const { user, loading, logout, login } = useAuth();
   const lastCategoryRef = useRef<string | null>(null); // Tracer la dernière catégorie scrollée
 
   const [darkMode, setDarkMode] = useState<boolean>(() => {
@@ -566,9 +566,10 @@ function App(): ReactNode {
     return (
       <div className="app">
         <UnifiedLogin
-          onLoginSuccess={() => {
-            // Afficher le prompt d'installation PWA après connexion réussie
-            setTimeout(() => setShowPWAInstall(true), 2000);
+          onLoginSuccess={async () => {
+            // Recharger la page pour forcer onAuthStateChanged à se déclencher
+            // avec le nouvel utilisateur Firebase Auth
+            window.location.reload();
           }}
         />
       </div>
