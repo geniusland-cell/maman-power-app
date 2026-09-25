@@ -112,7 +112,7 @@ export default function DepotsList({
           const hasProducts = depot.products && depot.products.length > 0;
 
           return (
-            <div key={depot.id} className="depot-item">
+            <div key={depot.id} className="depot-item" tabIndex={0}>
               <div className="depot-header">
                 <button
                   className={`favorite-btn ${favorites.includes(depot.id) ? "active" : ""}`}
@@ -158,21 +158,39 @@ export default function DepotsList({
                             )}
                             alt={product.name}
                             className="product-thumb"
+                            tabIndex={0}
                             onClick={() =>
                               openImageModal(
                                 product.image || product.image_url!,
                               )
                             }
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                openImageModal(
+                                  product.image || product.image_url!,
+                                );
+                              }
+                            }}
                             title="Cliquer pour agrandir"
                           />
                         ) : (
                           <div
                             className="product-thumb-placeholder"
+                            tabIndex={0}
                             onClick={() =>
                               openImageModal(
                                 `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='50' y='55' font-size='60' text-anchor='middle'%3E📦%3C/text%3E%3C/svg%3E`,
                               )
                             }
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                openImageModal(
+                                  `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='50' y='55' font-size='60' text-anchor='middle'%3E📦%3C/text%3E%3C/svg%3E`,
+                                );
+                              }
+                            }}
                             title="Aucune image disponible"
                           >
                             {getCategoryIcon(product.category)}

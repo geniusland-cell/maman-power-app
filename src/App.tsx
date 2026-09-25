@@ -706,7 +706,14 @@ function App(): ReactNode {
             <div
               key={index}
               className="category-card"
+              tabIndex={0}
               onClick={() => showCategory(category.name)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  showCategory(category.name);
+                }
+              }}
             >
               <div className="category-icon">{category.icon}</div>
               <div className="category-name">{category.name}</div>

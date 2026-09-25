@@ -4,6 +4,21 @@
   box-sizing: border-box;
 }
 
+/* Keyboard navigation focus styles for feature phones */
+*:focus {
+  outline: 3px solid #009739;
+  outline-offset: 2px;
+}
+
+button:focus,
+a:focus,
+input:focus,
+select:focus {
+  outline: 3px solid #009739;
+  outline-offset: 2px;
+  background-color: rgba(0, 151, 57, 0.1);
+}
+
 body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background: linear-gradient(135deg, #667eea 0%, #ffffff 50%, #667eea 100%);
