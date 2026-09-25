@@ -1,5 +1,6 @@
 import { useState, useEffect, ReactNode } from "react";
 import { X, Smartphone } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import type { DepotWithProducts } from "../types";
 import "./QRCodeModal.css";
 

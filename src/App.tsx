@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, ReactNode, useRef } from "react";
-import { Fish, Beef, Logs, Wine, ShoppingBag, Apple, MessageCircle, Bell, Moon, Sun, Clock, X } from "lucide-react";
+import { Fish, Beef, Logs, Wine, ShoppingBag, Apple, MessageCircle, Bell, Moon, Sun, Clock, X, Scale } from "lucide-react";
 import { Analytics } from "@vercel/analytics/react";
 import {
   listenToCategories,
@@ -652,7 +652,7 @@ function App(): ReactNode {
               onClick={() => setShowTermsModal(true)}
               title="Conditions d'utilisation"
             >
-              ⚖️
+              <Scale size={18} />
             </button>
             <button
               className="help-btn"
